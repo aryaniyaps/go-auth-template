@@ -53,7 +53,7 @@ func NewApp() *fx.App {
 		fx.Supply(config),
 		fx.Provide(
 			// router
-			http.New,
+			http.NewRouter,
 			// database client
 			db.NewDB,
 			// logger

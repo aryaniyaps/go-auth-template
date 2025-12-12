@@ -28,7 +28,7 @@ func addMiddleware(r *chi.Mux, log *zap.Logger) {
 	r.Use(middleware.Recoverer)
 }
 
-func New(lc fx.Lifecycle, cfg *config.Config, log *zap.Logger) *chi.Mux {
+func NewRouter(lc fx.Lifecycle, cfg *config.Config, log *zap.Logger) *chi.Mux {
 	r := chi.NewRouter()
 	addMiddleware(r, log)
 
