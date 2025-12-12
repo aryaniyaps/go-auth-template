@@ -8,7 +8,7 @@ package resolver
 import (
 	"context"
 	"fmt"
-	"server/graph"
+	"server/graph/generated"
 )
 
 // Empty is the resolver for the _empty field.
@@ -21,11 +21,11 @@ func (r *queryResolver) Empty(ctx context.Context) (*string, error) {
 	panic(fmt.Errorf("not implemented: Empty - _empty"))
 }
 
-// Mutation returns graph.MutationResolver implementation.
-func (r *Resolver) Mutation() graph.MutationResolver { return &mutationResolver{r} }
+// Mutation returns generated.MutationResolver implementation.
+func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
-// Query returns graph.QueryResolver implementation.
-func (r *Resolver) Query() graph.QueryResolver { return &queryResolver{r} }
+// Query returns generated.QueryResolver implementation.
+func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

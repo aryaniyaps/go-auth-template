@@ -4,14 +4,14 @@ schema:
 
 # Where should the generated server code go?
 exec:
-  package: graph
+  package: generated
   layout: follow-schema # Only other option is "follow-schema," ie multi-file.
 
   # Only for single-file layout:
   # filename: graph/generated.go
 
   # Only for follow-schema layout:
-  dir: graph
+  dir: graph/generated
   filename_template: "{name}.generated.go"
 
   # Optional: Maximum number of goroutines in concurrency to use per child resolvers(default: unlimited)
