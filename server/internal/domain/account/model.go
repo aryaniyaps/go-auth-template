@@ -64,3 +64,29 @@ func (a *Account) TwoFactorProviders() []TwoFactorProvider {
 	}
 	return providers
 }
+
+type EmailVerificationToken struct {
+	core.CoreModel
+	bun.BaseModel `bun:"table:email_verification_tokens,alias:evt"`
+
+	Email     string    `bun:"email,notnull,unique"`
+	TokenHash string    `bun:"token_hash,notnull"`
+	ExpiresAt time.Time `bun:"expires_at,notnull"`
+}
+
+func (evt *EmailVerificationToken) IsExpired() bool {
+	return time.Now().After(evt.ExpiresAt)
+}
+
+type PhoneNumberVerificationToken struct {
+	core.CoreModel
+	bun.BaseModel `bun:"table:phone_verification_tokens,alias:pvt"`
+
+	PhoneNumber string    `bun:"phone_number,notnull,unique"`
+	TokenHash   string    `bun:"token_hash,notnull"`
+	ExpiresAt   time.Time `bun:"expires_at,notnull"`
+}
+
+func (pvt *PhoneNumberVerificationToken) IsExpired() bool {
+	return time.Now().After(pvt.ExpiresAt)
+}
