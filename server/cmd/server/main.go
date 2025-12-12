@@ -9,6 +9,8 @@ import (
 	"server/internal/http"
 	"server/internal/infrastructure/db"
 	"server/internal/logger"
+	"server/internal/domain/account"
+	"server/internal/domain/auth"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -58,6 +60,12 @@ func NewApp() *fx.App {
 			db.NewDB,
 			// logger
 			logger.New,
+		),
+		fx.Options(
+			// Account domain repositories
+			account.AccountDomainModule,
+			// Auth domain repositories
+			auth.AuthDomainModule,
 		),
 		fx.Invoke(
 			AddGraphQLHandler,
