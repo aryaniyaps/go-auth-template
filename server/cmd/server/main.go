@@ -3,10 +3,11 @@
 package main
 
 import (
-	"server/graph"
+	"server/graph/generated"
 	"server/graph/resolver"
 	"server/internal/config"
 	"server/internal/http"
+	"server/internal/infrastructure/db"
 	"server/internal/logger"
 
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -22,7 +23,7 @@ import (
 )
 
 func AddGraphQLHandler(r *chi.Mux, cfg *config.Config) {
-	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &resolver.Resolver{}}))
+	srv := handler.New(generated.NewExecutableSchema(generated.Config{Resolvers: &resolver.Resolver{}}))
 
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
@@ -53,6 +54,8 @@ func NewApp() *fx.App {
 		fx.Provide(
 			// router
 			http.New,
+			// database client
+			db.NewDB,
 			// logger
 			logger.New,
 		),
