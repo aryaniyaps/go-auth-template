@@ -1,10 +1,19 @@
 package account
 
 import (
+	"crypto/md5"
+	"encoding/hex"
+	"fmt"
 	"server/internal/domain/core"
 	"time"
 
 	"github.com/uptrace/bun"
+)
+
+type TwoFactorProvider string
+
+const (
+	TwoFactorProviderAuthenticator TwoFactorProvider = "authenticator"
 )
 
 type TermsAndPolicy struct {
@@ -22,13 +31,36 @@ type Account struct {
 	core.CoreModel
 	bun.BaseModel `bun:"table:accounts,alias:acc"`
 
-	FullName        string   `bun:"full_name,notnull"`
-	Email           string   `bun:"email,unique,notnull"`
-	PasswordHash    string   `bun:"password_hash,nullzero"`
-	TwoFactorSecret string   `bun:"two_factor_secret,nullzero"`
-	AvatarURL       string   `bun:"avatar_url,nullzero"`
-	AuthProviders   []string `bun:"auth_providers,array"`
+	FullName          string   `bun:"full_name,notnull"`
+	Email             string   `bun:"email,unique,notnull"`
+	PasswordHash      *string  `bun:"password_hash"`     // nullable for OAuth accounts
+	TwoFactorSecret   *string  `bun:"two_factor_secret"` // nullable
+	InternalAvatarURL *string  `bun:"avatar_url"`        // nullable
+	AuthProviders     []string `bun:"auth_providers,array"`
 
 	TermsAndPolicy TermsAndPolicy      `bun:"embed:terms_and_policy_"`
 	AnalyticsPref  AnalyticsPreference `bun:"embed:analytics_pref_"`
+}
+
+func (a *Account) AvatarURL() string {
+	if a.InternalAvatarURL != nil {
+		return *a.InternalAvatarURL
+	}
+	h := md5.Sum([]byte(a.FullName))
+	seedHash := hex.EncodeToString(h[:])
+
+	// return f"https://api.dicebear.com/9.x/shapes/png?seed={seed_hash}"
+	return fmt.Sprintf("https://api.dicebear.com/9.x/shapes/png?seed=%s", seedHash)
+}
+
+func (a *Account) Has2FAEnabled() bool {
+	return a.TwoFactorSecret != nil && *a.TwoFactorSecret != ""
+}
+
+func (a *Account) TwoFactorProviders() []TwoFactorProvider {
+	providers := make([]TwoFactorProvider, 0)
+	if a.TwoFactorSecret != nil && *a.TwoFactorSecret != "" {
+		providers = append(providers, TwoFactorProviderAuthenticator)
+	}
+	return providers
 }
