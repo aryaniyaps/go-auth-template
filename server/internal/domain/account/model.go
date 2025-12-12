@@ -31,12 +31,15 @@ type Account struct {
 	core.CoreModel
 	bun.BaseModel `bun:"table:accounts,alias:acc"`
 
-	FullName          string   `bun:"full_name,notnull"`
-	Email             string   `bun:"email,unique,notnull"`
-	PasswordHash      *string  `bun:"password_hash"`     // nullable for OAuth accounts
-	TwoFactorSecret   *string  `bun:"two_factor_secret"` // nullable
-	InternalAvatarURL *string  `bun:"avatar_url"`        // nullable
-	AuthProviders     []string `bun:"auth_providers,array"`
+	FullName             string   `bun:"full_name,notnull"`
+	Email                string   `bun:"email,unique,notnull"`
+	PasswordHash         *string  `bun:"password_hash"`         // nullable for OAuth accounts
+	TwoFactorSecret      *string  `bun:"two_factor_secret"`     // nullable
+	InternalAvatarURL    *string  `bun:"avatar_url"`            // nullable
+	AuthProviders        []string `bun:"auth_providers,array"`
+	PhoneNumber          *string  `bun:"phone_number,unique"`   // nullable, unique constraint
+	Profile              *string  `bun:"profile"`               // nullable, for future profile data
+	WhatsAppJobAlerts    *bool    `bun:"whatsapp_job_alerts"`    // nullable, default false
 
 	TermsAndPolicy TermsAndPolicy      `bun:"embed:terms_and_policy_"`
 	AnalyticsPref  AnalyticsPreference `bun:"embed:analytics_pref_"`
