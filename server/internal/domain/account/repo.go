@@ -168,8 +168,7 @@ func (r *accountRepo) Create(ctx context.Context, email string, fullName string,
 	}
 
 	if phoneNumber != nil {
-		// Note: You would need to add PhoneNumber field to the Account model
-		// account.PhoneNumber = *phoneNumber
+		account.PhoneNumber = phoneNumber
 	}
 
 	if password != nil {
@@ -206,7 +205,9 @@ func (r *accountRepo) Create(ctx context.Context, email string, fullName string,
 			if isEmailUniqueViolation(err) {
 				return nil, ErrEmailAlreadyExists
 			}
-			// Add phone number check when PhoneNumber field is added
+			if isPhoneUniqueViolation(err) {
+				return nil, ErrPhoneAlreadyExists
+			}
 			return nil, fmt.Errorf("unique constraint violation: %w", err)
 		}
 		return nil, fmt.Errorf("failed to create account: %w", err)
@@ -249,8 +250,18 @@ func (r *accountRepo) GetByEmail(ctx context.Context, email string) (*Account, e
 
 // GetByPhoneNumber retrieves an account by phone number
 func (r *accountRepo) GetByPhoneNumber(ctx context.Context, phoneNumber string) (*Account, error) {
-	// Note: This would need PhoneNumber field added to Account model
-	return nil, errors.New("phone number field not implemented in Account model")
+	account := &Account{}
+	err := r.db.NewSelect().
+		Model(account).
+		Where("phone_number = ?", phoneNumber).
+		Scan(ctx)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrAccountNotFound
+		}
+		return nil, fmt.Errorf("failed to get account by phone number: %w", err)
+	}
+	return account, nil
 }
 
 // Update updates an account with optional fields
@@ -264,7 +275,10 @@ func (r *accountRepo) Update(ctx context.Context, account *Account, fullName *st
 		account.InternalAvatarURL = avatarURL
 	}
 
-	// Note: phoneNumber would need to be added to the Account model
+	if phoneNumber != nil {
+		account.PhoneNumber = phoneNumber
+	}
+
 	if termsAndPolicy != nil {
 		account.TermsAndPolicy = *termsAndPolicy
 	}
@@ -274,8 +288,7 @@ func (r *accountRepo) Update(ctx context.Context, account *Account, fullName *st
 	}
 
 	if whatsappJobAlerts != nil {
-		// Note: You would need to add WhatsAppJobAlerts field to Account model
-		// account.WhatsappJobAlertsEnabled = whatsappJobAlerts
+		account.WhatsAppJobAlerts = whatsappJobAlerts
 	}
 
 	// Use Bun's update functionality to save the changes
@@ -286,6 +299,10 @@ func (r *accountRepo) Update(ctx context.Context, account *Account, fullName *st
 		Returning("*").
 		Exec(ctx)
 	if err != nil {
+		// Handle unique constraint violations for phone number
+		if isUniqueViolation(err) && isPhoneUniqueViolation(err) {
+			return nil, ErrPhoneAlreadyExists
+		}
 		return nil, fmt.Errorf("failed to update account: %w", err)
 	}
 
@@ -449,6 +466,11 @@ func isEmailUniqueViolation(err error) bool {
 	return contains(errStr, "email") && contains(errStr, "unique")
 }
 
+func isPhoneUniqueViolation(err error) bool {
+	errStr := err.Error()
+	return contains(errStr, "phone_number") && contains(errStr, "unique")
+}
+
 func contains(s, substr string) bool {
 	return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
 }
@@ -583,7 +605,7 @@ func (r *phoneNumberVerificationTokenRepo) HashVerificationToken(token string) s
 
 // Create creates a new phone number verification token
 func (r *phoneNumberVerificationTokenRepo) Create(ctx context.Context, phoneNumber string) (string, *PhoneNumberVerificationToken, error) {
-	token, err := r.GenerateVerificationToken(32)
+	token, err := r.GenerateVerificationToken(6)
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to generate verification token: %w", err)
 	}
