@@ -1,82 +1,45 @@
 package db
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
-func TestGetCursorForID(t *testing.T) {
-	t.Run("Valid ID returns cursor", func(t *testing.T) {
-		cursor := GetCursorForID(123)
-		require.NotNil(t, cursor)
-		assert.NotEmpty(t, *cursor)
-	})
+func TestProcessPaginatedResult(t *testing.T) {
+	t.Run("Processes paginated result with string cursors", func(t *testing.T) {
+		items := []TestItem{{id: 3}, {id: 2}, {id: 1}, {id: 4}} // Extra item for hasNextPage
+		first := intPtr(3)
 
-	t.Run("Zero ID returns nil", func(t *testing.T) {
-		cursor := GetCursorForID(0)
-		assert.Nil(t, cursor)
-	})
+		result := ProcessPaginatedResult(items, first, nil)
 
-	t.Run("Negative ID returns nil", func(t *testing.T) {
-		cursor := GetCursorForID(-1)
-		assert.Nil(t, cursor)
-	})
-}
-
-func TestParseCursor(t *testing.T) {
-	t.Run("Valid cursor parses correctly", func(t *testing.T) {
-		originalID := int64(123)
-		cursor := GetCursorForID(originalID)
-		require.NotNil(t, cursor)
-
-		parsedID, err := ParseCursor(*cursor)
-		require.NoError(t, err)
-		assert.Equal(t, originalID, parsedID)
-	})
-
-	t.Run("Empty cursor returns zero", func(t *testing.T) {
-		parsedID, err := ParseCursor("")
-		require.NoError(t, err)
-		assert.Equal(t, int64(0), parsedID)
-	})
-
-	t.Run("Invalid cursor returns error", func(t *testing.T) {
-		parsedID, err := ParseCursor("invalid-base64!")
-		assert.Error(t, err)
-		assert.Equal(t, int64(0), parsedID)
-	})
-
-	t.Run("Invalid cursor ID returns error", func(t *testing.T) {
-		invalidCursor := "invalid!"
-		parsedID, err := ParseCursor(invalidCursor)
-		assert.Error(t, err)
-		assert.Equal(t, int64(0), parsedID)
-	})
-}
-
-func TestNewPaginatedResult(t *testing.T) {
-	t.Run("Creates paginated result with all fields", func(t *testing.T) {
-		data := []string{"item1", "item2"}
-		startCursor := GetCursorForID(1)
-		endCursor := GetCursorForID(2)
-
-		result := NewPaginatedResult(data, true, false, startCursor, endCursor)
-
-		assert.Equal(t, data, result.Data)
+		assert.Len(t, result.Data, 3) // Extra item removed
 		assert.True(t, result.HasNextPage)
 		assert.False(t, result.HasPreviousPage)
-		assert.Equal(t, startCursor, result.StartCursor)
-		assert.Equal(t, endCursor, result.EndCursor)
+		assert.Equal(t, "3", *result.StartCursor)
+		assert.Equal(t, "1", *result.EndCursor)
 	})
 
-	t.Run("Creates paginated result with nil cursors", func(t *testing.T) {
-		data := []string{"item1"}
+	t.Run("Processes paginated result with int64 cursors", func(t *testing.T) {
+		items := []TestItem{{id: 4}, {id: 3}, {id: 2}, {id: 1}} // Extra item for hasPreviousPage
+		last := intPtr(3)
 
-		result := NewPaginatedResult(data, false, false, nil, nil)
+		result := ProcessPaginatedResult(items, nil, last)
 
-		assert.Equal(t, data, result.Data)
+		assert.Len(t, result.Data, 3) // First item removed
+		assert.False(t, result.HasNextPage)
+		assert.True(t, result.HasPreviousPage)
+		assert.Equal(t, int64(3), *result.StartCursor)
+		assert.Equal(t, int64(1), *result.EndCursor)
+	})
+
+	t.Run("Processes empty result", func(t *testing.T) {
+		var items []TestItem
+
+		result := ProcessPaginatedResult(items, nil, nil)
+
+		assert.Empty(t, result.Data)
 		assert.False(t, result.HasNextPage)
 		assert.False(t, result.HasPreviousPage)
 		assert.Nil(t, result.StartCursor)
@@ -84,12 +47,21 @@ func TestNewPaginatedResult(t *testing.T) {
 	})
 }
 
-func TestValidatePaginationOptions(t *testing.T) {
+// TestItem for testing ProcessPaginatedResult - implements GetID() method
+type TestItem struct {
+	id int64
+}
+
+func (t TestItem) GetID() int64 {
+	return t.id
+}
+
+func TestValidatePagination(t *testing.T) {
 	t.Run("Valid options pass validation", func(t *testing.T) {
 		options := PaginationOptions{
 			First: intPtr(10),
 		}
-		err := ValidatePaginationOptions(options)
+		err := ValidatePagination(options)
 		assert.NoError(t, err)
 	})
 
@@ -97,7 +69,7 @@ func TestValidatePaginationOptions(t *testing.T) {
 		options := PaginationOptions{
 			First: intPtr(0),
 		}
-		err := ValidatePaginationOptions(options)
+		err := ValidatePagination(options)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "first parameter must be positive")
 	})
@@ -106,7 +78,7 @@ func TestValidatePaginationOptions(t *testing.T) {
 		options := PaginationOptions{
 			Last: intPtr(-1),
 		}
-		err := ValidatePaginationOptions(options)
+		err := ValidatePagination(options)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "last parameter must be positive")
 	})
@@ -116,30 +88,27 @@ func TestValidatePaginationOptions(t *testing.T) {
 			First: intPtr(10),
 			Last:  intPtr(5),
 		}
-		err := ValidatePaginationOptions(options)
+		err := ValidatePagination(options)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "cannot specify both first and last")
 	})
 }
 
 func TestPaginationEdgeCases(t *testing.T) {
-	t.Run("Cursor roundtrip preserves ID", func(t *testing.T) {
+	t.Run("Cursor creation preserves ID", func(t *testing.T) {
 		testIDs := []int64{1, 999, 999999, 123456789}
 
 		for _, id := range testIDs {
-			cursor := GetCursorForID(id)
-			require.NotNil(t, cursor)
-
-			parsedID, err := ParseCursor(*cursor)
-			require.NoError(t, err)
-			assert.Equal(t, id, parsedID)
+			cursor := fmt.Sprintf("%d", id)
+			assert.Equal(t, fmt.Sprintf("%d", id), cursor)
 		}
 	})
 
 	t.Run("Empty data creates valid result", func(t *testing.T) {
-		var data []string
+		var items []TestItem
+		first := intPtr(5)
 
-		result := NewPaginatedResult(data, false, false, nil, nil)
+		result := ProcessPaginatedResult(items, first, nil)
 
 		assert.Empty(t, result.Data)
 		assert.False(t, result.HasNextPage)

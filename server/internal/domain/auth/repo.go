@@ -11,14 +11,13 @@ import (
 	"strings"
 	"time"
 
+	"server/internal/infrastructure/db"
+
 	"github.com/pquerna/otp/totp"
 	"github.com/uptrace/bun"
 )
 
 // Import pagination infrastructure
-import (
-	"server/internal/infrastructure/db"
-)
 
 // Error types for auth repository operations
 var (
@@ -90,7 +89,7 @@ type SessionRepo interface {
 	Get(ctx context.Context, token string, fetchAccount bool) (*Session, error)
 	GetBySessionAccountId(ctx context.Context, sessionId int64, accountId int64, exceptSessionToken string) (*Session, error)
 	GetAllList(ctx context.Context, accountId int64, exceptSessionToken string) ([]*Session, error)
-	GetAllByAccountId(ctx context.Context, accountId int64, exceptSessionToken string, first *int, last *int, before *string, after *string) (*db.PaginatedResult[*Session], error)
+	GetAllByAccountId(ctx context.Context, accountId int64, exceptSessionToken string, first *int, last *int, before *string, after *string) (*db.PaginatedResult[*Session, int64], error)
 	DeleteByToken(ctx context.Context, token string) error
 	Delete(ctx context.Context, session *Session) error
 	DeleteMany(ctx context.Context, sessionIds []int64) error
@@ -212,7 +211,7 @@ func (r *sessionRepo) GetAllList(ctx context.Context, accountId int64, exceptSes
 	return sessions, nil
 }
 
-func (r *sessionRepo) GetAllByAccountId(ctx context.Context, accountId int64, exceptSessionToken string, first *int, last *int, before *string, after *string) (*db.PaginatedResult[*Session], error) {
+func (r *sessionRepo) GetAllByAccountId(ctx context.Context, accountId int64, exceptSessionToken string, first *int, last *int, before *string, after *string) (*db.PaginatedResult[*Session, int64], error) {
 	sessions := make([]*Session, 0)
 	query := r.db.NewSelect().
 		Model(&sessions).
@@ -222,43 +221,29 @@ func (r *sessionRepo) GetAllByAccountId(ctx context.Context, accountId int64, ex
 		query = query.Where("token_hash != ?", r.HashSessionToken(exceptSessionToken))
 	}
 
-	// Apply pagination
-	options := db.PaginationOptions{
+	// Apply pagination using simplified API
+	paginationOptions := db.PaginationOptions{
 		First:  first,
 		Last:   last,
-		Before: before,
 		After:  after,
+		Before: before,
 	}
 
-	query = db.ApplyCursorPagination(query, options, true) // true for reverse order
+	// Validate pagination parameters
+	if err := db.ValidatePagination(paginationOptions); err != nil {
+		return nil, fmt.Errorf("invalid pagination parameters: %w", err)
+	}
+
+	query = db.ApplyPagination(query, paginationOptions)
 
 	err := query.Scan(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get paginated sessions: %w", err)
 	}
 
-	// Determine pagination metadata
-	hasNextPage := false
-	hasPreviousPage := false
-	var startCursor *string
-	var endCursor *string
-
-	if len(sessions) > 0 {
-		startCursor = db.GetCursorForID(sessions[0].ID)
-		endCursor = db.GetCursorForID(sessions[len(sessions)-1].ID)
-
-		// Check if we have an extra item to determine pagination state
-		if first != nil && len(sessions) > *first {
-			hasNextPage = true
-			sessions = sessions[:len(sessions)-1] // Remove the extra item
-		} else if last != nil && len(sessions) > *last {
-			hasPreviousPage = true
-			sessions = sessions[1:] // Remove the first item
-		}
-	}
-
-	result := db.NewPaginatedResult(sessions, hasNextPage, hasPreviousPage, startCursor, endCursor)
-	return result, nil
+	// Process pagination metadata - returns PaginatedResult with int64 cursors
+	result := db.ProcessPaginatedResult[*Session, int64](sessions, first, last)
+	return &result, nil
 }
 
 func (r *sessionRepo) DeleteByToken(ctx context.Context, token string) error {
@@ -423,7 +408,7 @@ type WebAuthnCredentialRepo interface {
 	Delete(ctx context.Context, credential *WebAuthnCredential) error
 	GetAllByAccountList(ctx context.Context, accountId int64) ([]*WebAuthnCredential, error)
 	Update(ctx context.Context, webAuthnCredentialId int64, nickname string) (*WebAuthnCredential, error)
-	GetAllByAccountId(ctx context.Context, accountId int64, first *int, last *int, before *string, after *string) (*db.PaginatedResult[*WebAuthnCredential], error)
+	GetAllByAccountId(ctx context.Context, accountId int64, first *int, last *int, before *string, after *string) (*db.PaginatedResult[*WebAuthnCredential, int64], error)
 }
 
 // WebAuthn credential repository implementation
@@ -437,14 +422,14 @@ func NewWebAuthnCredentialRepo(db *bun.DB) WebAuthnCredentialRepo {
 
 func (r *webAuthnCredentialRepo) Create(ctx context.Context, accountId int64, credentialId []byte, credentialPublicKey []byte, signCount uint32, deviceType string, backedUp bool, transports []string, nickname string) (*WebAuthnCredential, error) {
 	webAuthnCredential := &WebAuthnCredential{
-		CredentialID:     credentialId,
-		PublicKey:        credentialPublicKey,
-		SignCount:        signCount,
-		DeviceType:       deviceType,
-		BackedUp:         backedUp,
-		Transports:       strings.Join(transports, ","),
-		Nickname:         nickname,
-		AccountId:        accountId,
+		CredentialID: credentialId,
+		PublicKey:    credentialPublicKey,
+		SignCount:    signCount,
+		DeviceType:   deviceType,
+		BackedUp:     backedUp,
+		Transports:   transports,
+		Nickname:     nickname,
+		AccountId:    accountId,
 	}
 
 	_, err := r.db.NewInsert().
@@ -520,7 +505,7 @@ func (r *webAuthnCredentialRepo) Delete(ctx context.Context, credential *WebAuth
 	return nil
 }
 
-func (r *WebAuthnCredentialRepo) GetAllByAccountList(ctx context.Context, accountId int64) ([]*WebAuthnCredential, error) {
+func (r *webAuthnCredentialRepo) GetAllByAccountList(ctx context.Context, accountId int64) ([]*WebAuthnCredential, error) {
 	credentials := make([]*WebAuthnCredential, 0)
 	err := r.db.NewSelect().
 		Model(&credentials).
@@ -534,7 +519,7 @@ func (r *WebAuthnCredentialRepo) GetAllByAccountList(ctx context.Context, accoun
 	return credentials, nil
 }
 
-func (r *WebAuthnCredentialRepo) Update(ctx context.Context, webAuthnCredentialId int64, nickname string) (*WebAuthnCredential, error) {
+func (r *webAuthnCredentialRepo) Update(ctx context.Context, webAuthnCredentialId int64, nickname string) (*WebAuthnCredential, error) {
 	// First get the existing credential
 	credential := &WebAuthnCredential{}
 	err := r.db.NewSelect().
@@ -561,49 +546,35 @@ func (r *WebAuthnCredentialRepo) Update(ctx context.Context, webAuthnCredentialI
 	return credential, nil
 }
 
-func (r *WebAuthnCredentialRepo) GetAllByAccountId(ctx context.Context, accountId int64, first *int, last *int, before *string, after *string) (*db.PaginatedResult[*WebAuthnCredential], error) {
+func (r *webAuthnCredentialRepo) GetAllByAccountId(ctx context.Context, accountId int64, first *int, last *int, before *string, after *string) (*db.PaginatedResult[*WebAuthnCredential, int64], error) {
 	credentials := make([]*WebAuthnCredential, 0)
 	query := r.db.NewSelect().
 		Model(&credentials).
 		Where("account_id = ?", accountId)
 
-	// Apply pagination
-	options := db.PaginationOptions{
+	// Apply pagination using simplified API
+	paginationOptions := db.PaginationOptions{
 		First:  first,
 		Last:   last,
-		Before: before,
 		After:  after,
+		Before: before,
 	}
 
-	query = db.ApplyCursorPagination(query, options, true) // true for reverse order
+	// Validate pagination parameters
+	if err := db.ValidatePagination(paginationOptions); err != nil {
+		return nil, fmt.Errorf("invalid pagination parameters: %w", err)
+	}
+
+	query = db.ApplyPagination(query, paginationOptions)
 
 	err := query.Scan(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get paginated webauthn credentials: %w", err)
 	}
 
-	// Determine pagination metadata
-	hasNextPage := false
-	hasPreviousPage := false
-	var startCursor *string
-	var endCursor *string
-
-	if len(credentials) > 0 {
-		startCursor = db.GetCursorForID(credentials[0].ID)
-		endCursor = db.GetCursorForID(credentials[len(credentials)-1].ID)
-
-		// Check if we have an extra item to determine pagination state
-		if first != nil && len(credentials) > *first {
-			hasNextPage = true
-			credentials = credentials[:len(credentials)-1] // Remove the extra item
-		} else if last != nil && len(credentials) > *last {
-			hasPreviousPage = true
-			credentials = credentials[1:] // Remove the first item
-		}
-	}
-
-	result := db.NewPaginatedResult(credentials, hasNextPage, hasPreviousPage, startCursor, endCursor)
-	return result, nil
+	// Process pagination metadata - returns PaginatedResult with string cursors
+	result := db.ProcessPaginatedResult[*WebAuthnCredential, int64](credentials, first, last)
+	return &result, nil
 }
 
 // WebAuthnChallengeRepo interface defines methods for WebAuthn challenge management
@@ -834,7 +805,7 @@ func (r *twoFactorAuthenticationChallengeRepo) Create(ctx context.Context, accou
 }
 
 func (r *twoFactorAuthenticationChallengeRepo) Get(ctx context.Context, challenge string, fetchAccount bool) (*TwoFactorAuthenticationChallenge, error) {
-	twoFactorChallenge := &TwoFactorChallenge{}
+	twoFactorChallenge := &TwoFactorAuthenticationChallenge{}
 	query := r.db.NewSelect().
 		Model(twoFactorChallenge).
 		Where("challenge_hash = ?", r.HashChallenge(challenge))

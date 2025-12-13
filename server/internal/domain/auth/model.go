@@ -21,6 +21,11 @@ type Session struct {
 	Account *account.Account `bun:"rel:belongs-to,join:account_id=id"`
 }
 
+// GetID returns the session ID for cursor pagination
+func (s *Session) GetID() int64 {
+	return s.ID
+}
+
 type PasswordResetToken struct {
 	core.CoreModel
 	bun.BaseModel `bun:"table:password_reset_tokens,alias:prt"`
@@ -37,17 +42,22 @@ type WebAuthnCredential struct {
 	core.CoreModel
 	bun.BaseModel `bun:"table:webauthn_credentials,alias:wac"`
 
-	CredentialID []byte `bun:"credential_id,unique,notnull"`
-	PublicKey    []byte `bun:"public_key,notnull"`
-	SignCount    uint32 `bun:"sign_count,notnull"`
-	DeviceType   string `bun:"device_type"`
-	BackedUp     bool   `bun:"backed_up,notnull"`
-	Nickname     string `bun:"nickname"`
-	Transports   string `bun:"transports,array,notnull"`
-	AccountId    int64  `bun:"account_id,notnull"`
+	CredentialID []byte   `bun:"credential_id,unique,notnull"`
+	PublicKey    []byte   `bun:"public_key,notnull"`
+	SignCount    uint32   `bun:"sign_count,notnull"`
+	DeviceType   string   `bun:"device_type"`
+	BackedUp     bool     `bun:"backed_up,notnull"`
+	Nickname     string   `bun:"nickname"`
+	Transports   []string `bun:"transports,array,notnull"`
+	AccountId    int64    `bun:"account_id,notnull"`
 
 	// account relationship
 	Account *account.Account `bun:"rel:belongs-to,join:account_id=id"`
+}
+
+// GetID returns the WebAuthn credential ID for cursor pagination
+func (w *WebAuthnCredential) GetID() int64 {
+	return w.ID
 }
 
 type WebAuthnChallenge struct {
