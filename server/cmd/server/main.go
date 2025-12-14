@@ -81,8 +81,6 @@ func NewApp() *fx.App {
 			account.AccountDomainModule,
 			// Auth domain repositories
 			auth.AuthDomainModule,
-			// HTTP top-level dependencies (JWT auth, middleware)
-			serverhttp.HTTPTopLevelModule,
 		),
 		fx.Invoke(
 			AddGraphQLHandler,

@@ -10,12 +10,11 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/go-chi/jwtauth/v5"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 )
 
-func addMiddleware(r *chi.Mux, log *zap.Logger, jwtAuth *jwtauth.JWTAuth) {
+func addMiddleware(r *chi.Mux, cfg *config.Config, log *zap.Logger) {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(httpmiddleware.LoggerMiddleware(log))
@@ -27,12 +26,21 @@ func addMiddleware(r *chi.Mux, log *zap.Logger, jwtAuth *jwtauth.JWTAuth) {
 	}))
 	r.Use(middleware.Heartbeat("/ping"))
 	r.Use(middleware.Recoverer)
-	r.Use(httpmiddleware.NewSessionMiddleware(jwtAuth, log))
+
+	r.Use(httpmiddleware.NewSessionMiddleware(httpmiddleware.SessionConfig{
+		JWESecretKey:  cfg.JWESecret,
+		SessionCookie: "session",
+		MaxAge:        14 * 24 * 60 * 60, // 14 days
+		Path:          "/",
+		SameSite:      http.SameSiteLaxMode,
+		Secure:        false, // Set to true in production with HTTPS
+		Domain:        "",
+	}, log))
 }
 
-func NewRouter(lc fx.Lifecycle, cfg *config.Config, log *zap.Logger, jwtAuth *jwtauth.JWTAuth) *chi.Mux {
+func NewRouter(lc fx.Lifecycle, cfg *config.Config, log *zap.Logger) *chi.Mux {
 	r := chi.NewRouter()
-	addMiddleware(r, log, jwtAuth)
+	addMiddleware(r, cfg, log)
 
 	srv := &http.Server{Addr: ":" + cfg.ServerPort, Handler: r}
 

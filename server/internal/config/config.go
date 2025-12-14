@@ -17,6 +17,9 @@ type Config struct {
 	// JWT Configuration
 	JWTSecret string `mapstructure:"JWT_SECRET"`
 
+	// JWE Configuration
+	JWESecret string `mapstructure:"JWE_SECRET"`
+
 	// S3 Configuration
 	S3Bucket    string `mapstructure:"S3_BUCKET"`
 	S3Region    string `mapstructure:"S3_REGION"`
@@ -49,6 +52,9 @@ func SetupConfig() *Config {
 
 	// Set default for JWT secret in development
 	viper.SetDefault("JWT_SECRET", "development-secret-change-in-production")
+
+	// Set default for JWE secret in development (exactly 16 bytes for AES-128)
+	viper.SetDefault("JWE_SECRET", "dev-jwe-secret-16b!")
 
 	err = viper.Unmarshal(&config)
 	if err != nil {
