@@ -1,4 +1,14 @@
 """
+Date (isoformat)
+"""
+scalar Date
+
+"""
+DateTime scalar represents an ISO 8601-encoded date and time string.
+"""
+scalar DateTime
+
+"""
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf).
 """
 scalar JSON @specifiedBy(url: "https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf")

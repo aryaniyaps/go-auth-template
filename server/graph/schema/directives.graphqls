@@ -1,0 +1,3 @@
+directive @isAuthenticated on FIELD_DEFINITION
+
+directive @requiresSudoMode on FIELD_DEFINITION

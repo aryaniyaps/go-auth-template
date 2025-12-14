@@ -1,4 +1,47 @@
 """
+The terms and policy.
+"""
+type TermsAndPolicy {
+	type: TermsAndPolicyType!
+	updatedAt: DateTime!
+	isLatest: Boolean!
+}
+
+"""
+The terms and policy type.
+"""
+enum TermsAndPolicyType {
+	ACCEPTANCE
+	REJECTION
+	UNDECIDED
+}
+
+"""
+The analytics preference.
+"""
+type AnalyticsPreference {
+	type: AnalyticsPreferenceType!
+	updatedAt: DateTime!
+}
+
+"""
+The analytics preference input type.
+"""
+enum AnalyticsPreferenceInputType {
+	ACCEPTANCE
+	REJECTION
+}
+
+"""
+The analytics preference type.
+"""
+enum AnalyticsPreferenceType {
+	ACCEPTANCE
+	REJECTION
+	UNDECIDED
+}
+
+"""
 An account.
 """
 type Account implements Node {
@@ -166,4 +209,95 @@ type PhoneNumberVerificationTokenCooldownError implements Error {
 	"""
 	message: String!
 	remainingSeconds: Int!
+}
+
+
+"""
+The create phone number verification token payload.
+"""
+union RequestPhoneNumberVerificationTokenPayload =
+	| RequestPhoneNumberVerificationTokenSuccess
+	| PhoneNumberAlreadyExistsError
+	| InvalidPhoneNumberError
+	| PhoneNumberVerificationTokenCooldownError
+
+type RequestPhoneNumberVerificationTokenSuccess implements Error {
+	"""
+	Success message.
+	"""
+	message: String!
+
+	"""
+	The remaining seconds before the next phone number verification token can be requested.
+	"""
+	cooldownRemainingSeconds: Int!
+}
+
+
+"""
+The remove account phone number payload.
+"""
+union RemoveAccountPhoneNumberPayload = Account | PhoneNumberDoesNotExistError
+
+
+extend type Mutation {
+	"""
+	Update the current user's account.
+	"""
+	updateAccount(
+		"""
+		The full name of the user account.
+		"""
+		fullName: String!
+
+		"""
+		The URL of the profile picture.
+		"""
+		avatarUrl: String
+	): UpdateAccountPayload! @isAuthenticated
+
+	"""
+	Create a phone number verification token.
+	"""
+	requestPhoneNumberVerificationToken(
+		"""
+		The phone of the user account.
+		"""
+		phoneNumber: String!
+	): RequestPhoneNumberVerificationTokenPayload! @isAuthenticated
+
+	"""
+	Update the current user's phone number.
+	"""
+	updateAccountPhoneNumber(
+		"""
+		The phone of the user account.
+		"""
+		phoneNumber: String!
+
+		"""
+		The phone number verification token.
+		"""
+		phoneNumberVerificationToken: String!
+	): UpdateAccountPhoneNumberPayload! @isAuthenticated @requiresSudoMode
+
+	"""
+	Remove the current user's phone number.
+	"""
+	removeAccountPhoneNumber: RemoveAccountPhoneNumberPayload! @isAuthenticated @requiresSudoMode
+
+	"""
+	Update the current user's analytics preference.
+	"""
+	updateAccountAnalyticsPreference(
+		"""
+		The analytics preference of the user account.
+		"""
+		analyticsPreference: AnalyticsPreferenceInputType!
+	): Account
+
+	"""
+	Remove the avatar from the current user account.
+	"""
+	removeAccountAvatar: Account! @isAuthenticated
 }

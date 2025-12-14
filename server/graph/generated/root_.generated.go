@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"server/graph/model"
 	"sync/atomic"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -37,15 +38,319 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
+	IsAuthenticated  func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
+	RequiresSudoMode func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
 }
 
 type ComplexityRoot struct {
+	Account struct {
+		AnalyticsPreference func(childComplexity int) int
+		AuthProviders       func(childComplexity int) int
+		AvatarURL           func(childComplexity int) int
+		CurrentSession      func(childComplexity int) int
+		Email               func(childComplexity int) int
+		FullName            func(childComplexity int) int
+		Has2faEnabled       func(childComplexity int) int
+		ID                  func(childComplexity int) int
+		PhoneNumber         func(childComplexity int) int
+		Sessions            func(childComplexity int, before *string, after *string, first *int32, last *int32) int
+		SudoModeExpiresAt   func(childComplexity int) int
+		TermsAndPolicy      func(childComplexity int) int
+		TwoFactorProviders  func(childComplexity int) int
+		UpdatedAt           func(childComplexity int) int
+		WebAuthnCredentials func(childComplexity int, before *string, after *string, first *int32, last *int32) int
+	}
+
+	AnalyticsPreference struct {
+		Type      func(childComplexity int) int
+		UpdatedAt func(childComplexity int) int
+	}
+
+	AuthenticatorNotEnabledError struct {
+		Message func(childComplexity int) int
+	}
+
+	CreatePresignedURLPayloadType struct {
+		PresignedURL func(childComplexity int) int
+	}
+
+	CreateWebAuthnCredentialSuccess struct {
+		WebAuthnCredentialEdge func(childComplexity int) int
+	}
+
+	DeleteOtherSessionsPayload struct {
+		DeletedSessionIds func(childComplexity int) int
+	}
+
+	DeleteSessionSuccess struct {
+		SessionEdge func(childComplexity int) int
+	}
+
+	DeleteWebAuthnCredentialSuccess struct {
+		WebAuthnCredentialEdge func(childComplexity int) int
+	}
+
+	EmailInUseError struct {
+		Message func(childComplexity int) int
+	}
+
+	EmailVerificationTokenCooldownError struct {
+		Message          func(childComplexity int) int
+		RemainingSeconds func(childComplexity int) int
+	}
+
+	EnableAccount2FAWithAuthenticatorSuccess struct {
+		Account       func(childComplexity int) int
+		RecoveryCodes func(childComplexity int) int
+	}
+
+	Generate2FARecoveryCodesSuccess struct {
+		RecoveryCodes func(childComplexity int) int
+	}
+
+	GenerateAuthenticationOptionsSuccess struct {
+		AuthenticationOptions func(childComplexity int) int
+	}
+
+	GenerateAuthenticator2FAChallengeSuccess struct {
+		OtpURI func(childComplexity int) int
+		Secret func(childComplexity int) int
+	}
+
+	GeneratePasskeyCreationOptionsSuccess struct {
+		RegistrationOptions func(childComplexity int) int
+	}
+
+	GeneratePasskeyRegistrationOptionsSuccess struct {
+		RegistrationOptions func(childComplexity int) int
+	}
+
+	InsufficientAuthProvidersError struct {
+		Message func(childComplexity int) int
+	}
+
+	InvalidAuthenticationProviderError struct {
+		AvailableProviders func(childComplexity int) int
+		Message            func(childComplexity int) int
+	}
+
+	InvalidCaptchaTokenError struct {
+		Message func(childComplexity int) int
+	}
+
+	InvalidCredentialsError struct {
+		Message func(childComplexity int) int
+	}
+
+	InvalidEmailError struct {
+		Message func(childComplexity int) int
+	}
+
+	InvalidEmailVerificationTokenError struct {
+		Message func(childComplexity int) int
+	}
+
+	InvalidPasskeyAuthenticationCredentialError struct {
+		Message func(childComplexity int) int
+	}
+
+	InvalidPasskeyRegistrationCredentialError struct {
+		Message func(childComplexity int) int
+	}
+
+	InvalidPasswordResetTokenError struct {
+		Message func(childComplexity int) int
+	}
+
+	InvalidPhoneNumberError struct {
+		Message func(childComplexity int) int
+	}
+
+	InvalidPhoneNumberVerificationTokenError struct {
+		Message func(childComplexity int) int
+	}
+
+	LogoutPayload struct {
+		Message func(childComplexity int) int
+	}
+
 	Mutation struct {
-		Empty func(childComplexity int) int
+		CreateWebAuthnCredential                  func(childComplexity int, passkeyRegistrationResponse string, nickname string) int
+		DeleteOtherSessions                       func(childComplexity int) int
+		DeletePassword                            func(childComplexity int) int
+		DeleteSession                             func(childComplexity int, sessionID string) int
+		DeleteWebAuthnCredential                  func(childComplexity int, webAuthnCredentialID string) int
+		DisableAccount2faWithAuthenticator        func(childComplexity int) int
+		Empty                                     func(childComplexity int) int
+		EnableAccount2faWithAuthenticator         func(childComplexity int, token string) int
+		Generate2faRecoveryCodes                  func(childComplexity int) int
+		GenerateAuthenticationOptions             func(childComplexity int, captchaToken string) int
+		GenerateAuthenticator2faChallenge         func(childComplexity int) int
+		GeneratePasskeyRegistrationOptions        func(childComplexity int, email string, fullName string, captchaToken string) int
+		GenerateReauthenticationOptions           func(childComplexity int, captchaToken string) int
+		GenerateWebAuthnCredentialCreationOptions func(childComplexity int) int
+		LoginWithPasskey                          func(childComplexity int, authenticationResponse string, captchaToken string) int
+		LoginWithPassword                         func(childComplexity int, login string, password string, captchaToken string) int
+		Logout                                    func(childComplexity int) int
+		RegisterWithPasskey                       func(childComplexity int, email string, emailVerificationToken string, passkeyRegistrationResponse string, passkeyNickname string, fullName string, captchaToken string) int
+		RegisterWithPassword                      func(childComplexity int, email string, emailVerificationToken string, password string, fullName string, captchaToken string) int
+		RemoveAccountAvatar                       func(childComplexity int) int
+		RemoveAccountPhoneNumber                  func(childComplexity int) int
+		RequestEmailVerificationToken             func(childComplexity int, email string, captchaToken string) int
+		RequestPasswordReset                      func(childComplexity int, email string, captchaToken string) int
+		RequestPhoneNumberVerificationToken       func(childComplexity int, phoneNumber string) int
+		RequestSudoModeWithAuthenticator          func(childComplexity int, twoFactorToken string, captchaToken string) int
+		RequestSudoModeWithPasskey                func(childComplexity int, authenticationResponse string, captchaToken string) int
+		RequestSudoModeWithPassword               func(childComplexity int, password string, captchaToken string) int
+		ResetPassword                             func(childComplexity int, email string, passwordResetToken string, newPassword string) int
+		UpdateAccount                             func(childComplexity int, fullName string, avatarURL *string) int
+		UpdateAccountAnalyticsPreference          func(childComplexity int, analyticsPreference model.AnalyticsPreferenceInputType) int
+		UpdateAccountPhoneNumber                  func(childComplexity int, phoneNumber string, phoneNumberVerificationToken string) int
+		UpdatePassword                            func(childComplexity int, newPassword string) int
+		UpdateWebAuthnCredential                  func(childComplexity int, webAuthnCredentialID string, nickname string) int
+		Verify2faPasswordResetWithAuthenticator   func(childComplexity int, email string, passwordResetToken string, twoFactorToken string, captchaToken string) int
+		Verify2faPasswordResetWithPasskey         func(childComplexity int, email string, passwordResetToken string, authenticationResponse string, captchaToken string) int
+		Verify2faWithAuthenticator                func(childComplexity int, token string, captchaToken string) int
+		Verify2faWithRecoveryCode                 func(childComplexity int, token string, captchaToken string) int
+		VerifyEmail                               func(childComplexity int, email string, emailVerificationToken string, captchaToken string) int
+		VerifyGoogleToken                         func(childComplexity int, token string) int
+	}
+
+	NotAuthenticatedError struct {
+		Message func(childComplexity int) int
+	}
+
+	PageInfo struct {
+		EndCursor       func(childComplexity int) int
+		HasNextPage     func(childComplexity int) int
+		HasPreviousPage func(childComplexity int) int
+		StartCursor     func(childComplexity int) int
+	}
+
+	PasswordNotStrongError struct {
+		Message func(childComplexity int) int
+	}
+
+	PasswordResetToken struct {
+		AuthProviders      func(childComplexity int) int
+		Email              func(childComplexity int) int
+		ID                 func(childComplexity int) int
+		Needs2fa           func(childComplexity int) int
+		TwoFactorProviders func(childComplexity int) int
+	}
+
+	PasswordResetTokenCooldownError struct {
+		Message          func(childComplexity int) int
+		RemainingSeconds func(childComplexity int) int
+	}
+
+	PasswordResetTokenNotFoundError struct {
+		Message func(childComplexity int) int
+	}
+
+	PhoneNumberAlreadyExistsError struct {
+		Message func(childComplexity int) int
+	}
+
+	PhoneNumberDoesNotExistError struct {
+		Message func(childComplexity int) int
+	}
+
+	PhoneNumberMissingError struct {
+		Message func(childComplexity int) int
+	}
+
+	PhoneNumberVerificationTokenCooldownError struct {
+		Message          func(childComplexity int) int
+		RemainingSeconds func(childComplexity int) int
 	}
 
 	Query struct {
 		Empty func(childComplexity int) int
+	}
+
+	RequestEmailVerificationSuccess struct {
+		Message          func(childComplexity int) int
+		RemainingSeconds func(childComplexity int) int
+	}
+
+	RequestPasswordResetSuccess struct {
+		Message func(childComplexity int) int
+	}
+
+	RequestPhoneNumberVerificationTokenSuccess struct {
+		CooldownRemainingSeconds func(childComplexity int) int
+		Message                  func(childComplexity int) int
+	}
+
+	Session struct {
+		CreatedAt func(childComplexity int) int
+		ID        func(childComplexity int) int
+		IPAddress func(childComplexity int) int
+		UserAgent func(childComplexity int) int
+	}
+
+	SessionConnection struct {
+		Edges      func(childComplexity int) int
+		PageInfo   func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
+	SessionEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
+
+	SessionNotFoundError struct {
+		Message func(childComplexity int) int
+	}
+
+	TermsAndPolicy struct {
+		IsLatest  func(childComplexity int) int
+		Type      func(childComplexity int) int
+		UpdatedAt func(childComplexity int) int
+	}
+
+	TwoFactorAuthenticationChallengeNotFoundError struct {
+		Message func(childComplexity int) int
+	}
+
+	TwoFactorAuthenticationNotEnabledError struct {
+		Message func(childComplexity int) int
+	}
+
+	TwoFactorAuthenticationRequiredError struct {
+		Message func(childComplexity int) int
+	}
+
+	VerifyEmailSuccess struct {
+		Message func(childComplexity int) int
+	}
+
+	WebAuthnChallengeNotFoundError struct {
+		Message func(childComplexity int) int
+	}
+
+	WebAuthnCredential struct {
+		CreatedAt  func(childComplexity int) int
+		ID         func(childComplexity int) int
+		LastUsedAt func(childComplexity int) int
+		Nickname   func(childComplexity int) int
+	}
+
+	WebAuthnCredentialConnection struct {
+		Edges      func(childComplexity int) int
+		PageInfo   func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
+	WebAuthnCredentialEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
+
+	WebAuthnCredentialNotFoundError struct {
+		Message func(childComplexity int) int
 	}
 }
 
@@ -68,6 +373,402 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	_ = ec
 	switch typeName + "." + field {
 
+	case "Account.analyticsPreference":
+		if e.complexity.Account.AnalyticsPreference == nil {
+			break
+		}
+
+		return e.complexity.Account.AnalyticsPreference(childComplexity), true
+
+	case "Account.authProviders":
+		if e.complexity.Account.AuthProviders == nil {
+			break
+		}
+
+		return e.complexity.Account.AuthProviders(childComplexity), true
+
+	case "Account.avatarUrl":
+		if e.complexity.Account.AvatarURL == nil {
+			break
+		}
+
+		return e.complexity.Account.AvatarURL(childComplexity), true
+
+	case "Account.currentSession":
+		if e.complexity.Account.CurrentSession == nil {
+			break
+		}
+
+		return e.complexity.Account.CurrentSession(childComplexity), true
+
+	case "Account.email":
+		if e.complexity.Account.Email == nil {
+			break
+		}
+
+		return e.complexity.Account.Email(childComplexity), true
+
+	case "Account.fullName":
+		if e.complexity.Account.FullName == nil {
+			break
+		}
+
+		return e.complexity.Account.FullName(childComplexity), true
+
+	case "Account.has2faEnabled":
+		if e.complexity.Account.Has2faEnabled == nil {
+			break
+		}
+
+		return e.complexity.Account.Has2faEnabled(childComplexity), true
+
+	case "Account.id":
+		if e.complexity.Account.ID == nil {
+			break
+		}
+
+		return e.complexity.Account.ID(childComplexity), true
+
+	case "Account.phoneNumber":
+		if e.complexity.Account.PhoneNumber == nil {
+			break
+		}
+
+		return e.complexity.Account.PhoneNumber(childComplexity), true
+
+	case "Account.sessions":
+		if e.complexity.Account.Sessions == nil {
+			break
+		}
+
+		args, err := ec.field_Account_sessions_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Account.Sessions(childComplexity, args["before"].(*string), args["after"].(*string), args["first"].(*int32), args["last"].(*int32)), true
+
+	case "Account.sudoModeExpiresAt":
+		if e.complexity.Account.SudoModeExpiresAt == nil {
+			break
+		}
+
+		return e.complexity.Account.SudoModeExpiresAt(childComplexity), true
+
+	case "Account.termsAndPolicy":
+		if e.complexity.Account.TermsAndPolicy == nil {
+			break
+		}
+
+		return e.complexity.Account.TermsAndPolicy(childComplexity), true
+
+	case "Account.twoFactorProviders":
+		if e.complexity.Account.TwoFactorProviders == nil {
+			break
+		}
+
+		return e.complexity.Account.TwoFactorProviders(childComplexity), true
+
+	case "Account.updatedAt":
+		if e.complexity.Account.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.Account.UpdatedAt(childComplexity), true
+
+	case "Account.webAuthnCredentials":
+		if e.complexity.Account.WebAuthnCredentials == nil {
+			break
+		}
+
+		args, err := ec.field_Account_webAuthnCredentials_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Account.WebAuthnCredentials(childComplexity, args["before"].(*string), args["after"].(*string), args["first"].(*int32), args["last"].(*int32)), true
+
+	case "AnalyticsPreference.type":
+		if e.complexity.AnalyticsPreference.Type == nil {
+			break
+		}
+
+		return e.complexity.AnalyticsPreference.Type(childComplexity), true
+
+	case "AnalyticsPreference.updatedAt":
+		if e.complexity.AnalyticsPreference.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.AnalyticsPreference.UpdatedAt(childComplexity), true
+
+	case "AuthenticatorNotEnabledError.message":
+		if e.complexity.AuthenticatorNotEnabledError.Message == nil {
+			break
+		}
+
+		return e.complexity.AuthenticatorNotEnabledError.Message(childComplexity), true
+
+	case "CreatePresignedURLPayloadType.presignedUrl":
+		if e.complexity.CreatePresignedURLPayloadType.PresignedURL == nil {
+			break
+		}
+
+		return e.complexity.CreatePresignedURLPayloadType.PresignedURL(childComplexity), true
+
+	case "CreateWebAuthnCredentialSuccess.webAuthnCredentialEdge":
+		if e.complexity.CreateWebAuthnCredentialSuccess.WebAuthnCredentialEdge == nil {
+			break
+		}
+
+		return e.complexity.CreateWebAuthnCredentialSuccess.WebAuthnCredentialEdge(childComplexity), true
+
+	case "DeleteOtherSessionsPayload.deletedSessionIds":
+		if e.complexity.DeleteOtherSessionsPayload.DeletedSessionIds == nil {
+			break
+		}
+
+		return e.complexity.DeleteOtherSessionsPayload.DeletedSessionIds(childComplexity), true
+
+	case "DeleteSessionSuccess.sessionEdge":
+		if e.complexity.DeleteSessionSuccess.SessionEdge == nil {
+			break
+		}
+
+		return e.complexity.DeleteSessionSuccess.SessionEdge(childComplexity), true
+
+	case "DeleteWebAuthnCredentialSuccess.webAuthnCredentialEdge":
+		if e.complexity.DeleteWebAuthnCredentialSuccess.WebAuthnCredentialEdge == nil {
+			break
+		}
+
+		return e.complexity.DeleteWebAuthnCredentialSuccess.WebAuthnCredentialEdge(childComplexity), true
+
+	case "EmailInUseError.message":
+		if e.complexity.EmailInUseError.Message == nil {
+			break
+		}
+
+		return e.complexity.EmailInUseError.Message(childComplexity), true
+
+	case "EmailVerificationTokenCooldownError.message":
+		if e.complexity.EmailVerificationTokenCooldownError.Message == nil {
+			break
+		}
+
+		return e.complexity.EmailVerificationTokenCooldownError.Message(childComplexity), true
+
+	case "EmailVerificationTokenCooldownError.remainingSeconds":
+		if e.complexity.EmailVerificationTokenCooldownError.RemainingSeconds == nil {
+			break
+		}
+
+		return e.complexity.EmailVerificationTokenCooldownError.RemainingSeconds(childComplexity), true
+
+	case "EnableAccount2FAWithAuthenticatorSuccess.account":
+		if e.complexity.EnableAccount2FAWithAuthenticatorSuccess.Account == nil {
+			break
+		}
+
+		return e.complexity.EnableAccount2FAWithAuthenticatorSuccess.Account(childComplexity), true
+
+	case "EnableAccount2FAWithAuthenticatorSuccess.recoveryCodes":
+		if e.complexity.EnableAccount2FAWithAuthenticatorSuccess.RecoveryCodes == nil {
+			break
+		}
+
+		return e.complexity.EnableAccount2FAWithAuthenticatorSuccess.RecoveryCodes(childComplexity), true
+
+	case "Generate2FARecoveryCodesSuccess.recoveryCodes":
+		if e.complexity.Generate2FARecoveryCodesSuccess.RecoveryCodes == nil {
+			break
+		}
+
+		return e.complexity.Generate2FARecoveryCodesSuccess.RecoveryCodes(childComplexity), true
+
+	case "GenerateAuthenticationOptionsSuccess.authenticationOptions":
+		if e.complexity.GenerateAuthenticationOptionsSuccess.AuthenticationOptions == nil {
+			break
+		}
+
+		return e.complexity.GenerateAuthenticationOptionsSuccess.AuthenticationOptions(childComplexity), true
+
+	case "GenerateAuthenticator2FAChallengeSuccess.otpUri":
+		if e.complexity.GenerateAuthenticator2FAChallengeSuccess.OtpURI == nil {
+			break
+		}
+
+		return e.complexity.GenerateAuthenticator2FAChallengeSuccess.OtpURI(childComplexity), true
+
+	case "GenerateAuthenticator2FAChallengeSuccess.secret":
+		if e.complexity.GenerateAuthenticator2FAChallengeSuccess.Secret == nil {
+			break
+		}
+
+		return e.complexity.GenerateAuthenticator2FAChallengeSuccess.Secret(childComplexity), true
+
+	case "GeneratePasskeyCreationOptionsSuccess.registrationOptions":
+		if e.complexity.GeneratePasskeyCreationOptionsSuccess.RegistrationOptions == nil {
+			break
+		}
+
+		return e.complexity.GeneratePasskeyCreationOptionsSuccess.RegistrationOptions(childComplexity), true
+
+	case "GeneratePasskeyRegistrationOptionsSuccess.registrationOptions":
+		if e.complexity.GeneratePasskeyRegistrationOptionsSuccess.RegistrationOptions == nil {
+			break
+		}
+
+		return e.complexity.GeneratePasskeyRegistrationOptionsSuccess.RegistrationOptions(childComplexity), true
+
+	case "InsufficientAuthProvidersError.message":
+		if e.complexity.InsufficientAuthProvidersError.Message == nil {
+			break
+		}
+
+		return e.complexity.InsufficientAuthProvidersError.Message(childComplexity), true
+
+	case "InvalidAuthenticationProviderError.availableProviders":
+		if e.complexity.InvalidAuthenticationProviderError.AvailableProviders == nil {
+			break
+		}
+
+		return e.complexity.InvalidAuthenticationProviderError.AvailableProviders(childComplexity), true
+
+	case "InvalidAuthenticationProviderError.message":
+		if e.complexity.InvalidAuthenticationProviderError.Message == nil {
+			break
+		}
+
+		return e.complexity.InvalidAuthenticationProviderError.Message(childComplexity), true
+
+	case "InvalidCaptchaTokenError.message":
+		if e.complexity.InvalidCaptchaTokenError.Message == nil {
+			break
+		}
+
+		return e.complexity.InvalidCaptchaTokenError.Message(childComplexity), true
+
+	case "InvalidCredentialsError.message":
+		if e.complexity.InvalidCredentialsError.Message == nil {
+			break
+		}
+
+		return e.complexity.InvalidCredentialsError.Message(childComplexity), true
+
+	case "InvalidEmailError.message":
+		if e.complexity.InvalidEmailError.Message == nil {
+			break
+		}
+
+		return e.complexity.InvalidEmailError.Message(childComplexity), true
+
+	case "InvalidEmailVerificationTokenError.message":
+		if e.complexity.InvalidEmailVerificationTokenError.Message == nil {
+			break
+		}
+
+		return e.complexity.InvalidEmailVerificationTokenError.Message(childComplexity), true
+
+	case "InvalidPasskeyAuthenticationCredentialError.message":
+		if e.complexity.InvalidPasskeyAuthenticationCredentialError.Message == nil {
+			break
+		}
+
+		return e.complexity.InvalidPasskeyAuthenticationCredentialError.Message(childComplexity), true
+
+	case "InvalidPasskeyRegistrationCredentialError.message":
+		if e.complexity.InvalidPasskeyRegistrationCredentialError.Message == nil {
+			break
+		}
+
+		return e.complexity.InvalidPasskeyRegistrationCredentialError.Message(childComplexity), true
+
+	case "InvalidPasswordResetTokenError.message":
+		if e.complexity.InvalidPasswordResetTokenError.Message == nil {
+			break
+		}
+
+		return e.complexity.InvalidPasswordResetTokenError.Message(childComplexity), true
+
+	case "InvalidPhoneNumberError.message":
+		if e.complexity.InvalidPhoneNumberError.Message == nil {
+			break
+		}
+
+		return e.complexity.InvalidPhoneNumberError.Message(childComplexity), true
+
+	case "InvalidPhoneNumberVerificationTokenError.message":
+		if e.complexity.InvalidPhoneNumberVerificationTokenError.Message == nil {
+			break
+		}
+
+		return e.complexity.InvalidPhoneNumberVerificationTokenError.Message(childComplexity), true
+
+	case "LogoutPayload.message":
+		if e.complexity.LogoutPayload.Message == nil {
+			break
+		}
+
+		return e.complexity.LogoutPayload.Message(childComplexity), true
+
+	case "Mutation.createWebAuthnCredential":
+		if e.complexity.Mutation.CreateWebAuthnCredential == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createWebAuthnCredential_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateWebAuthnCredential(childComplexity, args["passkeyRegistrationResponse"].(string), args["nickname"].(string)), true
+
+	case "Mutation.deleteOtherSessions":
+		if e.complexity.Mutation.DeleteOtherSessions == nil {
+			break
+		}
+
+		return e.complexity.Mutation.DeleteOtherSessions(childComplexity), true
+
+	case "Mutation.deletePassword":
+		if e.complexity.Mutation.DeletePassword == nil {
+			break
+		}
+
+		return e.complexity.Mutation.DeletePassword(childComplexity), true
+
+	case "Mutation.deleteSession":
+		if e.complexity.Mutation.DeleteSession == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteSession_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteSession(childComplexity, args["sessionId"].(string)), true
+
+	case "Mutation.deleteWebAuthnCredential":
+		if e.complexity.Mutation.DeleteWebAuthnCredential == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteWebAuthnCredential_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteWebAuthnCredential(childComplexity, args["webAuthnCredentialId"].(string)), true
+
+	case "Mutation.disableAccount2faWithAuthenticator":
+		if e.complexity.Mutation.DisableAccount2faWithAuthenticator == nil {
+			break
+		}
+
+		return e.complexity.Mutation.DisableAccount2faWithAuthenticator(childComplexity), true
+
 	case "Mutation._empty":
 		if e.complexity.Mutation.Empty == nil {
 			break
@@ -75,12 +776,730 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Mutation.Empty(childComplexity), true
 
+	case "Mutation.enableAccount2faWithAuthenticator":
+		if e.complexity.Mutation.EnableAccount2faWithAuthenticator == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_enableAccount2faWithAuthenticator_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.EnableAccount2faWithAuthenticator(childComplexity, args["token"].(string)), true
+
+	case "Mutation.generate2faRecoveryCodes":
+		if e.complexity.Mutation.Generate2faRecoveryCodes == nil {
+			break
+		}
+
+		return e.complexity.Mutation.Generate2faRecoveryCodes(childComplexity), true
+
+	case "Mutation.generateAuthenticationOptions":
+		if e.complexity.Mutation.GenerateAuthenticationOptions == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_generateAuthenticationOptions_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.GenerateAuthenticationOptions(childComplexity, args["captchaToken"].(string)), true
+
+	case "Mutation.generateAuthenticator2faChallenge":
+		if e.complexity.Mutation.GenerateAuthenticator2faChallenge == nil {
+			break
+		}
+
+		return e.complexity.Mutation.GenerateAuthenticator2faChallenge(childComplexity), true
+
+	case "Mutation.generatePasskeyRegistrationOptions":
+		if e.complexity.Mutation.GeneratePasskeyRegistrationOptions == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_generatePasskeyRegistrationOptions_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.GeneratePasskeyRegistrationOptions(childComplexity, args["email"].(string), args["fullName"].(string), args["captchaToken"].(string)), true
+
+	case "Mutation.generateReauthenticationOptions":
+		if e.complexity.Mutation.GenerateReauthenticationOptions == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_generateReauthenticationOptions_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.GenerateReauthenticationOptions(childComplexity, args["captchaToken"].(string)), true
+
+	case "Mutation.generateWebAuthnCredentialCreationOptions":
+		if e.complexity.Mutation.GenerateWebAuthnCredentialCreationOptions == nil {
+			break
+		}
+
+		return e.complexity.Mutation.GenerateWebAuthnCredentialCreationOptions(childComplexity), true
+
+	case "Mutation.loginWithPasskey":
+		if e.complexity.Mutation.LoginWithPasskey == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_loginWithPasskey_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.LoginWithPasskey(childComplexity, args["authenticationResponse"].(string), args["captchaToken"].(string)), true
+
+	case "Mutation.loginWithPassword":
+		if e.complexity.Mutation.LoginWithPassword == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_loginWithPassword_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.LoginWithPassword(childComplexity, args["login"].(string), args["password"].(string), args["captchaToken"].(string)), true
+
+	case "Mutation.logout":
+		if e.complexity.Mutation.Logout == nil {
+			break
+		}
+
+		return e.complexity.Mutation.Logout(childComplexity), true
+
+	case "Mutation.registerWithPasskey":
+		if e.complexity.Mutation.RegisterWithPasskey == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_registerWithPasskey_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RegisterWithPasskey(childComplexity, args["email"].(string), args["emailVerificationToken"].(string), args["passkeyRegistrationResponse"].(string), args["passkeyNickname"].(string), args["fullName"].(string), args["captchaToken"].(string)), true
+
+	case "Mutation.registerWithPassword":
+		if e.complexity.Mutation.RegisterWithPassword == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_registerWithPassword_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RegisterWithPassword(childComplexity, args["email"].(string), args["emailVerificationToken"].(string), args["password"].(string), args["fullName"].(string), args["captchaToken"].(string)), true
+
+	case "Mutation.removeAccountAvatar":
+		if e.complexity.Mutation.RemoveAccountAvatar == nil {
+			break
+		}
+
+		return e.complexity.Mutation.RemoveAccountAvatar(childComplexity), true
+
+	case "Mutation.removeAccountPhoneNumber":
+		if e.complexity.Mutation.RemoveAccountPhoneNumber == nil {
+			break
+		}
+
+		return e.complexity.Mutation.RemoveAccountPhoneNumber(childComplexity), true
+
+	case "Mutation.requestEmailVerificationToken":
+		if e.complexity.Mutation.RequestEmailVerificationToken == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_requestEmailVerificationToken_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RequestEmailVerificationToken(childComplexity, args["email"].(string), args["captchaToken"].(string)), true
+
+	case "Mutation.requestPasswordReset":
+		if e.complexity.Mutation.RequestPasswordReset == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_requestPasswordReset_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RequestPasswordReset(childComplexity, args["email"].(string), args["captchaToken"].(string)), true
+
+	case "Mutation.requestPhoneNumberVerificationToken":
+		if e.complexity.Mutation.RequestPhoneNumberVerificationToken == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_requestPhoneNumberVerificationToken_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RequestPhoneNumberVerificationToken(childComplexity, args["phoneNumber"].(string)), true
+
+	case "Mutation.requestSudoModeWithAuthenticator":
+		if e.complexity.Mutation.RequestSudoModeWithAuthenticator == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_requestSudoModeWithAuthenticator_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RequestSudoModeWithAuthenticator(childComplexity, args["twoFactorToken"].(string), args["captchaToken"].(string)), true
+
+	case "Mutation.requestSudoModeWithPasskey":
+		if e.complexity.Mutation.RequestSudoModeWithPasskey == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_requestSudoModeWithPasskey_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RequestSudoModeWithPasskey(childComplexity, args["authenticationResponse"].(string), args["captchaToken"].(string)), true
+
+	case "Mutation.requestSudoModeWithPassword":
+		if e.complexity.Mutation.RequestSudoModeWithPassword == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_requestSudoModeWithPassword_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RequestSudoModeWithPassword(childComplexity, args["password"].(string), args["captchaToken"].(string)), true
+
+	case "Mutation.resetPassword":
+		if e.complexity.Mutation.ResetPassword == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_resetPassword_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ResetPassword(childComplexity, args["email"].(string), args["passwordResetToken"].(string), args["newPassword"].(string)), true
+
+	case "Mutation.updateAccount":
+		if e.complexity.Mutation.UpdateAccount == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateAccount_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateAccount(childComplexity, args["fullName"].(string), args["avatarUrl"].(*string)), true
+
+	case "Mutation.updateAccountAnalyticsPreference":
+		if e.complexity.Mutation.UpdateAccountAnalyticsPreference == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateAccountAnalyticsPreference_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateAccountAnalyticsPreference(childComplexity, args["analyticsPreference"].(model.AnalyticsPreferenceInputType)), true
+
+	case "Mutation.updateAccountPhoneNumber":
+		if e.complexity.Mutation.UpdateAccountPhoneNumber == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateAccountPhoneNumber_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateAccountPhoneNumber(childComplexity, args["phoneNumber"].(string), args["phoneNumberVerificationToken"].(string)), true
+
+	case "Mutation.updatePassword":
+		if e.complexity.Mutation.UpdatePassword == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updatePassword_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdatePassword(childComplexity, args["newPassword"].(string)), true
+
+	case "Mutation.updateWebAuthnCredential":
+		if e.complexity.Mutation.UpdateWebAuthnCredential == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateWebAuthnCredential_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateWebAuthnCredential(childComplexity, args["webAuthnCredentialId"].(string), args["nickname"].(string)), true
+
+	case "Mutation.verify2faPasswordResetWithAuthenticator":
+		if e.complexity.Mutation.Verify2faPasswordResetWithAuthenticator == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_verify2faPasswordResetWithAuthenticator_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.Verify2faPasswordResetWithAuthenticator(childComplexity, args["email"].(string), args["passwordResetToken"].(string), args["twoFactorToken"].(string), args["captchaToken"].(string)), true
+
+	case "Mutation.verify2faPasswordResetWithPasskey":
+		if e.complexity.Mutation.Verify2faPasswordResetWithPasskey == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_verify2faPasswordResetWithPasskey_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.Verify2faPasswordResetWithPasskey(childComplexity, args["email"].(string), args["passwordResetToken"].(string), args["authenticationResponse"].(string), args["captchaToken"].(string)), true
+
+	case "Mutation.verify2faWithAuthenticator":
+		if e.complexity.Mutation.Verify2faWithAuthenticator == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_verify2faWithAuthenticator_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.Verify2faWithAuthenticator(childComplexity, args["token"].(string), args["captchaToken"].(string)), true
+
+	case "Mutation.verify2faWithRecoveryCode":
+		if e.complexity.Mutation.Verify2faWithRecoveryCode == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_verify2faWithRecoveryCode_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.Verify2faWithRecoveryCode(childComplexity, args["token"].(string), args["captchaToken"].(string)), true
+
+	case "Mutation.verifyEmail":
+		if e.complexity.Mutation.VerifyEmail == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_verifyEmail_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.VerifyEmail(childComplexity, args["email"].(string), args["emailVerificationToken"].(string), args["captchaToken"].(string)), true
+
+	case "Mutation.verifyGoogleToken":
+		if e.complexity.Mutation.VerifyGoogleToken == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_verifyGoogleToken_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.VerifyGoogleToken(childComplexity, args["token"].(string)), true
+
+	case "NotAuthenticatedError.message":
+		if e.complexity.NotAuthenticatedError.Message == nil {
+			break
+		}
+
+		return e.complexity.NotAuthenticatedError.Message(childComplexity), true
+
+	case "PageInfo.endCursor":
+		if e.complexity.PageInfo.EndCursor == nil {
+			break
+		}
+
+		return e.complexity.PageInfo.EndCursor(childComplexity), true
+
+	case "PageInfo.hasNextPage":
+		if e.complexity.PageInfo.HasNextPage == nil {
+			break
+		}
+
+		return e.complexity.PageInfo.HasNextPage(childComplexity), true
+
+	case "PageInfo.hasPreviousPage":
+		if e.complexity.PageInfo.HasPreviousPage == nil {
+			break
+		}
+
+		return e.complexity.PageInfo.HasPreviousPage(childComplexity), true
+
+	case "PageInfo.startCursor":
+		if e.complexity.PageInfo.StartCursor == nil {
+			break
+		}
+
+		return e.complexity.PageInfo.StartCursor(childComplexity), true
+
+	case "PasswordNotStrongError.message":
+		if e.complexity.PasswordNotStrongError.Message == nil {
+			break
+		}
+
+		return e.complexity.PasswordNotStrongError.Message(childComplexity), true
+
+	case "PasswordResetToken.authProviders":
+		if e.complexity.PasswordResetToken.AuthProviders == nil {
+			break
+		}
+
+		return e.complexity.PasswordResetToken.AuthProviders(childComplexity), true
+
+	case "PasswordResetToken.email":
+		if e.complexity.PasswordResetToken.Email == nil {
+			break
+		}
+
+		return e.complexity.PasswordResetToken.Email(childComplexity), true
+
+	case "PasswordResetToken.id":
+		if e.complexity.PasswordResetToken.ID == nil {
+			break
+		}
+
+		return e.complexity.PasswordResetToken.ID(childComplexity), true
+
+	case "PasswordResetToken.needs2fa":
+		if e.complexity.PasswordResetToken.Needs2fa == nil {
+			break
+		}
+
+		return e.complexity.PasswordResetToken.Needs2fa(childComplexity), true
+
+	case "PasswordResetToken.twoFactorProviders":
+		if e.complexity.PasswordResetToken.TwoFactorProviders == nil {
+			break
+		}
+
+		return e.complexity.PasswordResetToken.TwoFactorProviders(childComplexity), true
+
+	case "PasswordResetTokenCooldownError.message":
+		if e.complexity.PasswordResetTokenCooldownError.Message == nil {
+			break
+		}
+
+		return e.complexity.PasswordResetTokenCooldownError.Message(childComplexity), true
+
+	case "PasswordResetTokenCooldownError.remainingSeconds":
+		if e.complexity.PasswordResetTokenCooldownError.RemainingSeconds == nil {
+			break
+		}
+
+		return e.complexity.PasswordResetTokenCooldownError.RemainingSeconds(childComplexity), true
+
+	case "PasswordResetTokenNotFoundError.message":
+		if e.complexity.PasswordResetTokenNotFoundError.Message == nil {
+			break
+		}
+
+		return e.complexity.PasswordResetTokenNotFoundError.Message(childComplexity), true
+
+	case "PhoneNumberAlreadyExistsError.message":
+		if e.complexity.PhoneNumberAlreadyExistsError.Message == nil {
+			break
+		}
+
+		return e.complexity.PhoneNumberAlreadyExistsError.Message(childComplexity), true
+
+	case "PhoneNumberDoesNotExistError.message":
+		if e.complexity.PhoneNumberDoesNotExistError.Message == nil {
+			break
+		}
+
+		return e.complexity.PhoneNumberDoesNotExistError.Message(childComplexity), true
+
+	case "PhoneNumberMissingError.message":
+		if e.complexity.PhoneNumberMissingError.Message == nil {
+			break
+		}
+
+		return e.complexity.PhoneNumberMissingError.Message(childComplexity), true
+
+	case "PhoneNumberVerificationTokenCooldownError.message":
+		if e.complexity.PhoneNumberVerificationTokenCooldownError.Message == nil {
+			break
+		}
+
+		return e.complexity.PhoneNumberVerificationTokenCooldownError.Message(childComplexity), true
+
+	case "PhoneNumberVerificationTokenCooldownError.remainingSeconds":
+		if e.complexity.PhoneNumberVerificationTokenCooldownError.RemainingSeconds == nil {
+			break
+		}
+
+		return e.complexity.PhoneNumberVerificationTokenCooldownError.RemainingSeconds(childComplexity), true
+
 	case "Query._empty":
 		if e.complexity.Query.Empty == nil {
 			break
 		}
 
 		return e.complexity.Query.Empty(childComplexity), true
+
+	case "RequestEmailVerificationSuccess.message":
+		if e.complexity.RequestEmailVerificationSuccess.Message == nil {
+			break
+		}
+
+		return e.complexity.RequestEmailVerificationSuccess.Message(childComplexity), true
+
+	case "RequestEmailVerificationSuccess.remainingSeconds":
+		if e.complexity.RequestEmailVerificationSuccess.RemainingSeconds == nil {
+			break
+		}
+
+		return e.complexity.RequestEmailVerificationSuccess.RemainingSeconds(childComplexity), true
+
+	case "RequestPasswordResetSuccess.message":
+		if e.complexity.RequestPasswordResetSuccess.Message == nil {
+			break
+		}
+
+		return e.complexity.RequestPasswordResetSuccess.Message(childComplexity), true
+
+	case "RequestPhoneNumberVerificationTokenSuccess.cooldownRemainingSeconds":
+		if e.complexity.RequestPhoneNumberVerificationTokenSuccess.CooldownRemainingSeconds == nil {
+			break
+		}
+
+		return e.complexity.RequestPhoneNumberVerificationTokenSuccess.CooldownRemainingSeconds(childComplexity), true
+
+	case "RequestPhoneNumberVerificationTokenSuccess.message":
+		if e.complexity.RequestPhoneNumberVerificationTokenSuccess.Message == nil {
+			break
+		}
+
+		return e.complexity.RequestPhoneNumberVerificationTokenSuccess.Message(childComplexity), true
+
+	case "Session.createdAt":
+		if e.complexity.Session.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Session.CreatedAt(childComplexity), true
+
+	case "Session.id":
+		if e.complexity.Session.ID == nil {
+			break
+		}
+
+		return e.complexity.Session.ID(childComplexity), true
+
+	case "Session.ipAddress":
+		if e.complexity.Session.IPAddress == nil {
+			break
+		}
+
+		return e.complexity.Session.IPAddress(childComplexity), true
+
+	case "Session.userAgent":
+		if e.complexity.Session.UserAgent == nil {
+			break
+		}
+
+		return e.complexity.Session.UserAgent(childComplexity), true
+
+	case "SessionConnection.edges":
+		if e.complexity.SessionConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.SessionConnection.Edges(childComplexity), true
+
+	case "SessionConnection.pageInfo":
+		if e.complexity.SessionConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.SessionConnection.PageInfo(childComplexity), true
+
+	case "SessionConnection.totalCount":
+		if e.complexity.SessionConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.SessionConnection.TotalCount(childComplexity), true
+
+	case "SessionEdge.cursor":
+		if e.complexity.SessionEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.SessionEdge.Cursor(childComplexity), true
+
+	case "SessionEdge.node":
+		if e.complexity.SessionEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.SessionEdge.Node(childComplexity), true
+
+	case "SessionNotFoundError.message":
+		if e.complexity.SessionNotFoundError.Message == nil {
+			break
+		}
+
+		return e.complexity.SessionNotFoundError.Message(childComplexity), true
+
+	case "TermsAndPolicy.isLatest":
+		if e.complexity.TermsAndPolicy.IsLatest == nil {
+			break
+		}
+
+		return e.complexity.TermsAndPolicy.IsLatest(childComplexity), true
+
+	case "TermsAndPolicy.type":
+		if e.complexity.TermsAndPolicy.Type == nil {
+			break
+		}
+
+		return e.complexity.TermsAndPolicy.Type(childComplexity), true
+
+	case "TermsAndPolicy.updatedAt":
+		if e.complexity.TermsAndPolicy.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.TermsAndPolicy.UpdatedAt(childComplexity), true
+
+	case "TwoFactorAuthenticationChallengeNotFoundError.message":
+		if e.complexity.TwoFactorAuthenticationChallengeNotFoundError.Message == nil {
+			break
+		}
+
+		return e.complexity.TwoFactorAuthenticationChallengeNotFoundError.Message(childComplexity), true
+
+	case "TwoFactorAuthenticationNotEnabledError.message":
+		if e.complexity.TwoFactorAuthenticationNotEnabledError.Message == nil {
+			break
+		}
+
+		return e.complexity.TwoFactorAuthenticationNotEnabledError.Message(childComplexity), true
+
+	case "TwoFactorAuthenticationRequiredError.message":
+		if e.complexity.TwoFactorAuthenticationRequiredError.Message == nil {
+			break
+		}
+
+		return e.complexity.TwoFactorAuthenticationRequiredError.Message(childComplexity), true
+
+	case "VerifyEmailSuccess.message":
+		if e.complexity.VerifyEmailSuccess.Message == nil {
+			break
+		}
+
+		return e.complexity.VerifyEmailSuccess.Message(childComplexity), true
+
+	case "WebAuthnChallengeNotFoundError.message":
+		if e.complexity.WebAuthnChallengeNotFoundError.Message == nil {
+			break
+		}
+
+		return e.complexity.WebAuthnChallengeNotFoundError.Message(childComplexity), true
+
+	case "WebAuthnCredential.createdAt":
+		if e.complexity.WebAuthnCredential.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.WebAuthnCredential.CreatedAt(childComplexity), true
+
+	case "WebAuthnCredential.id":
+		if e.complexity.WebAuthnCredential.ID == nil {
+			break
+		}
+
+		return e.complexity.WebAuthnCredential.ID(childComplexity), true
+
+	case "WebAuthnCredential.lastUsedAt":
+		if e.complexity.WebAuthnCredential.LastUsedAt == nil {
+			break
+		}
+
+		return e.complexity.WebAuthnCredential.LastUsedAt(childComplexity), true
+
+	case "WebAuthnCredential.nickname":
+		if e.complexity.WebAuthnCredential.Nickname == nil {
+			break
+		}
+
+		return e.complexity.WebAuthnCredential.Nickname(childComplexity), true
+
+	case "WebAuthnCredentialConnection.edges":
+		if e.complexity.WebAuthnCredentialConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.WebAuthnCredentialConnection.Edges(childComplexity), true
+
+	case "WebAuthnCredentialConnection.pageInfo":
+		if e.complexity.WebAuthnCredentialConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.WebAuthnCredentialConnection.PageInfo(childComplexity), true
+
+	case "WebAuthnCredentialConnection.totalCount":
+		if e.complexity.WebAuthnCredentialConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.WebAuthnCredentialConnection.TotalCount(childComplexity), true
+
+	case "WebAuthnCredentialEdge.cursor":
+		if e.complexity.WebAuthnCredentialEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.WebAuthnCredentialEdge.Cursor(childComplexity), true
+
+	case "WebAuthnCredentialEdge.node":
+		if e.complexity.WebAuthnCredentialEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.WebAuthnCredentialEdge.Node(childComplexity), true
+
+	case "WebAuthnCredentialNotFoundError.message":
+		if e.complexity.WebAuthnCredentialNotFoundError.Message == nil {
+			break
+		}
+
+		return e.complexity.WebAuthnCredentialNotFoundError.Message(childComplexity), true
 
 	}
 	return 0, false
@@ -186,7 +1605,1604 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../schema/query.graphqls", Input: `type Query {
+	{Name: "../schema/account.graphqls", Input: `"""
+The terms and policy.
+"""
+type TermsAndPolicy {
+	type: TermsAndPolicyType!
+	updatedAt: DateTime!
+	isLatest: Boolean!
+}
+
+"""
+The terms and policy type.
+"""
+enum TermsAndPolicyType {
+	ACCEPTANCE
+	REJECTION
+	UNDECIDED
+}
+
+"""
+The analytics preference.
+"""
+type AnalyticsPreference {
+	type: AnalyticsPreferenceType!
+	updatedAt: DateTime!
+}
+
+"""
+The analytics preference input type.
+"""
+enum AnalyticsPreferenceInputType {
+	ACCEPTANCE
+	REJECTION
+}
+
+"""
+The analytics preference type.
+"""
+enum AnalyticsPreferenceType {
+	ACCEPTANCE
+	REJECTION
+	UNDECIDED
+}
+
+"""
+An account.
+"""
+type Account implements Node {
+	"""
+	The Globally Unique ID of this object
+	"""
+	id: ID!
+
+	"""
+	The full name of the account.
+	"""
+	fullName: String!
+
+	"""
+	The email of the account.
+	"""
+	email: String!
+
+	"""
+	The avatar URL of the account.
+	"""
+	avatarUrl: String!
+
+	"""
+	The phone number of the account.
+	"""
+	phoneNumber: String
+
+	"""
+	When the account was last updated.
+	"""
+	updatedAt: DateTime
+
+	"""
+	The authentication providers supported by the account.
+	"""
+	authProviders: [AuthProvider!]!
+
+	"""
+	Available 2FA providers for the account.
+	"""
+	twoFactorProviders: [TwoFactorProvider!]!
+
+	"""
+	Whether the account has 2FA enabled.
+	"""
+	has2faEnabled: Boolean!
+
+	"""
+	The terms and policy of the account.
+	"""
+	termsAndPolicy: TermsAndPolicy!
+
+	"""
+	The analytics preference of the account.
+	"""
+	analyticsPreference: AnalyticsPreference!
+
+	"""
+	When the user's sudo mode grant expires at.
+	"""
+	sudoModeExpiresAt: DateTime
+
+	"""
+	The session for the current user.
+	"""
+	currentSession: Session!
+
+	"""
+	The sessions for the account.
+	"""
+	sessions(
+		"""
+		Returns items before the given cursor.
+		"""
+		before: ID = null
+
+		"""
+		Returns items after the given cursor.
+		"""
+		after: ID = null
+
+		"""
+		How many items to return after the cursor?
+		"""
+		first: Int = null
+
+		"""
+		How many items to return before the cursor?
+		"""
+		last: Int = null
+	): SessionConnection!
+
+	"""
+	The webauthn credentials for the account.
+	"""
+	webAuthnCredentials(
+		"""
+		Returns items before the given cursor.
+		"""
+		before: ID = null
+
+		"""
+		Returns items after the given cursor.
+		"""
+		after: ID = null
+
+		"""
+		How many items to return after the cursor?
+		"""
+		first: Int = null
+
+		"""
+		How many items to return before the cursor?
+		"""
+		last: Int = null
+	): WebAuthnCredentialConnection!
+}
+
+
+
+type InvalidPhoneNumberError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+type InvalidPhoneNumberVerificationTokenError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+
+type PhoneNumberAlreadyExistsError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+type PhoneNumberDoesNotExistError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+type PhoneNumberMissingError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+
+"""
+Used when the phone number verification token cooldown is active.
+"""
+type PhoneNumberVerificationTokenCooldownError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+	remainingSeconds: Int!
+}
+
+
+"""
+The create phone number verification token payload.
+"""
+union RequestPhoneNumberVerificationTokenPayload =
+	| RequestPhoneNumberVerificationTokenSuccess
+	| PhoneNumberAlreadyExistsError
+	| InvalidPhoneNumberError
+	| PhoneNumberVerificationTokenCooldownError
+
+type RequestPhoneNumberVerificationTokenSuccess implements Error {
+	"""
+	Success message.
+	"""
+	message: String!
+
+	"""
+	The remaining seconds before the next phone number verification token can be requested.
+	"""
+	cooldownRemainingSeconds: Int!
+}
+
+
+"""
+The remove account phone number payload.
+"""
+union RemoveAccountPhoneNumberPayload = Account | PhoneNumberDoesNotExistError
+
+
+extend type Mutation {
+	"""
+	Update the current user's account.
+	"""
+	updateAccount(
+		"""
+		The full name of the user account.
+		"""
+		fullName: String!
+
+		"""
+		The URL of the profile picture.
+		"""
+		avatarUrl: String
+	): UpdateAccountPayload! @isAuthenticated
+
+	"""
+	Create a phone number verification token.
+	"""
+	requestPhoneNumberVerificationToken(
+		"""
+		The phone of the user account.
+		"""
+		phoneNumber: String!
+	): RequestPhoneNumberVerificationTokenPayload! @isAuthenticated
+
+	"""
+	Update the current user's phone number.
+	"""
+	updateAccountPhoneNumber(
+		"""
+		The phone of the user account.
+		"""
+		phoneNumber: String!
+
+		"""
+		The phone number verification token.
+		"""
+		phoneNumberVerificationToken: String!
+	): UpdateAccountPhoneNumberPayload! @isAuthenticated @requiresSudoMode
+
+	"""
+	Remove the current user's phone number.
+	"""
+	removeAccountPhoneNumber: RemoveAccountPhoneNumberPayload! @isAuthenticated @requiresSudoMode
+
+	"""
+	Update the current user's analytics preference.
+	"""
+	updateAccountAnalyticsPreference(
+		"""
+		The analytics preference of the user account.
+		"""
+		analyticsPreference: AnalyticsPreferenceInputType!
+	): Account
+
+	"""
+	Remove the avatar from the current user account.
+	"""
+	removeAccountAvatar: Account! @isAuthenticated
+}
+`, BuiltIn: false},
+	{Name: "../schema/auth.graphqls", Input: `"""
+The authentication provider.
+"""
+enum AuthProvider {
+	PASSWORD
+	WEBAUTHN_CREDENTIAL
+	OAUTH_GOOGLE
+}
+
+"""
+The two factor provider provider.
+"""
+enum TwoFactorProvider {
+	AUTHENTICATOR
+}
+
+"""
+Used when the authenticator 2FA method is not enabled.
+"""
+type AuthenticatorNotEnabledError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+
+"""
+The create webauthn credential payload.
+"""
+union CreateWebAuthnCredentialPayload = CreateWebAuthnCredentialSuccess | InvalidPasskeyRegistrationCredentialError
+
+"""
+Create webauthn credential success.
+"""
+type CreateWebAuthnCredentialSuccess {
+	"""
+	The created webauthn credential edge.
+	"""
+	webAuthnCredentialEdge: WebAuthnCredentialEdge!
+}
+
+
+
+"""
+The delete other sessions payload.
+"""
+type DeleteOtherSessionsPayload {
+	"""
+	Deleted session IDs.
+	"""
+	deletedSessionIds: [ID!]!
+}
+
+"""
+The delete password payload.
+"""
+union DeletePasswordPayload = Account | InsufficientAuthProvidersError
+
+"""
+The delete session payload.
+"""
+union DeleteSessionPayload = DeleteSessionSuccess | SessionNotFoundError
+
+"""
+Delete session success.
+"""
+type DeleteSessionSuccess {
+	"""
+	The Deleted session edge.
+	"""
+	sessionEdge: SessionEdge!
+}
+
+"""
+The delete webauthn credential payload.
+"""
+union DeleteWebAuthnCredentialPayload = DeleteWebAuthnCredentialSuccess | WebAuthnCredentialNotFoundError | InsufficientAuthProvidersError
+
+"""
+Delete webauthn credential success.
+"""
+type DeleteWebAuthnCredentialSuccess {
+	"""
+	The Deleted webauthn credential edge.
+	"""
+	webAuthnCredentialEdge: WebAuthnCredentialEdge!
+}
+
+
+"""
+The disable account 2FA payload.
+"""
+union DisableAccount2FAWithAuthenticatorPayload = Account | AuthenticatorNotEnabledError
+
+
+"""
+Used when the email address is in use.
+"""
+type EmailInUseError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+"""
+Used when the email verification token cooldown is active.
+"""
+type EmailVerificationTokenCooldownError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+	remainingSeconds: Int!
+}
+
+
+"""
+Enable account 2FA with authenticator success.
+"""
+type EnableAccount2FAWithAuthenticatorSuccess {
+	"""
+	The account with 2FA enabled.
+	"""
+	account: Account!
+
+	"""
+	The recovery codes for the account.
+	"""
+	recoveryCodes: [String!]!
+}
+
+
+"""
+The generate 2FA recovery codes payload.
+"""
+union Generate2FARecoveryCodesPayload = Generate2FARecoveryCodesSuccess | TwoFactorAuthenticationNotEnabledError
+
+"""
+Generate 2FA recovery codes success.
+"""
+type Generate2FARecoveryCodesSuccess {
+	"""
+	The generated 2FA recovery codes.
+	"""
+	recoveryCodes: [String!]!
+}
+
+"""
+The generate authentication options payload.
+"""
+union GenerateAuthenticationOptionsPayload = GenerateAuthenticationOptionsSuccess | InvalidCaptchaTokenError
+
+"""
+Generate authentication options success.
+"""
+type GenerateAuthenticationOptionsSuccess {
+	"""
+	Passkey authentication options.
+	"""
+	authenticationOptions: JSON!
+}
+
+"""
+The generate authenticator 2FA challenge payload.
+"""
+union GenerateAuthenticator2FAChallengePayload = GenerateAuthenticator2FAChallengeSuccess
+
+"""
+Generate account 2FA Challenge success.
+"""
+type GenerateAuthenticator2FAChallengeSuccess {
+	"""
+	The generated 2FA OTP URI.
+	"""
+	otpUri: String!
+
+	"""
+	The generated 2FA secret.
+	"""
+	secret: String!
+}
+
+"""
+The generate passkey creation options payload.
+"""
+union GeneratePasskeyCreationOptionsPayload = GeneratePasskeyCreationOptionsSuccess
+
+"""
+Generate passkey creation options success.
+"""
+type GeneratePasskeyCreationOptionsSuccess {
+	"""
+	Passkey registration options for new passkey creation.
+	"""
+	registrationOptions: JSON!
+}
+
+"""
+The generate passkey registration options payload.
+"""
+union GeneratePasskeyRegistrationOptionsPayload = GeneratePasskeyRegistrationOptionsSuccess | InvalidCaptchaTokenError | EmailInUseError
+
+"""
+Generate passkey registration options success.
+"""
+type GeneratePasskeyRegistrationOptionsSuccess {
+	"""
+	Passkey registration options.
+	"""
+	registrationOptions: JSON!
+}
+
+
+"""
+Used when at least one authentication provider must be enabled.
+"""
+type InsufficientAuthProvidersError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+
+
+"""
+Used when an invalid authentication provider is used.
+"""
+type InvalidAuthenticationProviderError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+
+	"""
+	Available authentication providers for the account.
+	"""
+	availableProviders: [AuthProvider!]!
+}
+
+
+"""
+Used when invalid credentials are provided.
+"""
+type InvalidCredentialsError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+"""
+Used when an invalid email address is provided.
+"""
+type InvalidEmailError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+"""
+Used when an invalid email verification token is provided.
+"""
+type InvalidEmailVerificationTokenError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+
+
+"""
+Used when an invalid passkey authentication credential is provided.
+"""
+type InvalidPasskeyAuthenticationCredentialError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+"""
+Used when an invalid passkey registration credential is provided.
+"""
+type InvalidPasskeyRegistrationCredentialError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+"""
+Used when an invalid password reset token is provided.
+"""
+type InvalidPasswordResetTokenError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+
+
+"""
+The login with passkey payload.
+"""
+union LoginWithPasskeyPayload =
+	| Account
+	| InvalidPasskeyAuthenticationCredentialError
+	| InvalidCaptchaTokenError
+	| WebAuthnChallengeNotFoundError
+
+"""
+The login with password payload.
+"""
+union LoginWithPasswordPayload =
+	| Account
+	| InvalidCredentialsError
+	| InvalidCaptchaTokenError
+	| InvalidAuthenticationProviderError
+	| TwoFactorAuthenticationRequiredError
+
+"""
+The logout payload.
+"""
+type LogoutPayload {
+	"""
+	Human readable success message.
+	"""
+	message: String!
+}
+
+
+"""
+Used when the password is not strong enough.
+"""
+type PasswordNotStrongError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+"""
+A password reset token.
+"""
+type PasswordResetToken implements Node {
+	"""
+	The Globally Unique ID of this object
+	"""
+	id: ID!
+
+	"""
+	Email address of the password reset token's account.
+	"""
+	email: String!
+
+	"""
+	Available 2FA providers for the password reset token's account.
+	"""
+	authProviders: [AuthProvider!]!
+
+	"""
+	Available 2FA providers for the password reset token's account.
+	"""
+	twoFactorProviders: [TwoFactorProvider!]!
+
+	"""
+	Whether the password reset token needs 2FA to be used.
+	"""
+	needs2fa: Boolean!
+}
+
+"""
+Used when the password reset token cooldown is active.
+"""
+type PasswordResetTokenCooldownError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+	remainingSeconds: Int!
+}
+
+"""
+Used when the password reset token is not found.
+"""
+type PasswordResetTokenNotFoundError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+"""
+The password reset token payload.
+"""
+union PasswordResetTokenPayload = PasswordResetToken | PasswordResetTokenNotFoundError
+
+
+"""
+Request email verification success.
+"""
+type RequestEmailVerificationSuccess {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+
+	"""
+	Remaining seconds before requesting another email verification token.
+	"""
+	remainingSeconds: Int!
+}
+
+"""
+The request email verification token payload.
+"""
+union RequestEmailVerificationTokenPayload =
+	| RequestEmailVerificationSuccess
+	| EmailInUseError
+	| EmailVerificationTokenCooldownError
+	| InvalidCaptchaTokenError
+	| InvalidEmailError
+
+
+"""
+An account's session.
+"""
+type Session implements Node {
+	"""
+	The Globally Unique ID of this object
+	"""
+	id: ID!
+
+	"""
+	User agent of the session.
+	"""
+	userAgent: String!
+
+	"""
+	IP address of the session.
+	"""
+	ipAddress: String!
+
+	"""
+	When the session was created.
+	"""
+	createdAt: DateTime!
+}
+
+type SessionConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+
+	"""
+	A list of edges.
+	"""
+	edges: [SessionEdge!]!
+
+	"""
+	The total number of items in the connection.
+	"""
+	totalCount: Int
+}
+
+type SessionEdge {
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
+
+	"""
+	The item at the end of the edge
+	"""
+	node: Session!
+}
+
+"""
+Used when the session is not found.
+"""
+type SessionNotFoundError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+"""
+The enable account 2FA with authenticator payload.
+"""
+union SetAccount2FAPayload =
+	| EnableAccount2FAWithAuthenticatorSuccess
+	| InvalidCredentialsError
+	| TwoFactorAuthenticationChallengeNotFoundError
+
+
+
+"""
+Used when the 2FA challenge is not found.
+"""
+type TwoFactorAuthenticationChallengeNotFoundError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+"""
+Used when 2FA is not enabled for the account.
+"""
+type TwoFactorAuthenticationNotEnabledError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+"""
+Used when 2FA is required.
+"""
+type TwoFactorAuthenticationRequiredError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+
+
+"""
+The verify 2FA password reset with authenticator payload.
+"""
+union Verify2FAPasswordResetWithAuthenticatorPayload =
+	| PasswordResetToken
+	| InvalidCredentialsError
+	| AuthenticatorNotEnabledError
+	| InvalidPasswordResetTokenError
+	| InvalidCaptchaTokenError
+
+"""
+The verify 2FA password reset with passkey payload.
+"""
+union Verify2FAPasswordResetWithPasskeyPayload =
+	| PasswordResetToken
+	| InvalidPasskeyAuthenticationCredentialError
+	| TwoFactorAuthenticationNotEnabledError
+	| InvalidPasswordResetTokenError
+	| InvalidCaptchaTokenError
+	| WebAuthnChallengeNotFoundError
+
+"""
+The verify 2FA with authenticator payload.
+"""
+union Verify2FAWithAuthenticatorPayload =
+	| Account
+	| InvalidCredentialsError
+	| AuthenticatorNotEnabledError
+	| TwoFactorAuthenticationChallengeNotFoundError
+	| InvalidCaptchaTokenError
+
+"""
+The verify 2FA with recovery code payload.
+"""
+union Verify2FAWithRecoveryCodePayload =
+	| Account
+	| InvalidCredentialsError
+	| TwoFactorAuthenticationNotEnabledError
+	| TwoFactorAuthenticationChallengeNotFoundError
+	| InvalidCaptchaTokenError
+
+"""
+The verify email payload.
+"""
+union VerifyEmailPayload = VerifyEmailSuccess | InvalidCaptchaTokenError | InvalidEmailVerificationTokenError | EmailInUseError
+
+"""
+Verify email success.
+"""
+type VerifyEmailSuccess {
+	"""
+	Human readable success message.
+	"""
+	message: String!
+}
+
+"""
+The verify Google (one-tap) token payload.
+"""
+union VerifyGoogleTokenPayload = Account | InvalidCredentialsError | InvalidEmailError | TwoFactorAuthenticationRequiredError
+
+"""
+The viewer payload.
+"""
+union ViewerPayload = Account | NotAuthenticatedError
+
+"""
+Used when the WebAuthn challenge is not found.
+"""
+type WebAuthnChallengeNotFoundError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+"""
+A WebAuthn Credential belonging to an account.
+"""
+type WebAuthnCredential implements Node {
+	"""
+	The Globally Unique ID of this object
+	"""
+	id: ID!
+
+	"""
+	Nickname of the webauthn credential.
+	"""
+	nickname: String!
+
+	"""
+	When the webauthn credential was created.
+	"""
+	createdAt: DateTime!
+
+	"""
+	When the webauthn credential was last used.
+	"""
+	lastUsedAt: DateTime!
+}
+
+type WebAuthnCredentialConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+
+	"""
+	A list of edges.
+	"""
+	edges: [WebAuthnCredentialEdge!]!
+
+	"""
+	The total number of items in the connection.
+	"""
+	totalCount: Int
+}
+
+type WebAuthnCredentialEdge {
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
+
+	"""
+	The item at the end of the edge
+	"""
+	node: WebAuthnCredential!
+}
+
+"""
+Used when the webauthn credential is not found.
+"""
+type WebAuthnCredentialNotFoundError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+
+"""
+The update account payload.
+"""
+union UpdateAccountPayload = Account
+
+"""
+The update account phone number payload.
+"""
+union UpdateAccountPhoneNumberPayload = Account | InvalidPhoneNumberVerificationTokenError | InvalidPhoneNumberError
+
+"""
+The request password reset payload.
+"""
+union RequestPasswordResetPayload = RequestPasswordResetSuccess | InvalidCaptchaTokenError | PasswordResetTokenCooldownError
+
+"""
+Request password reset success.
+"""
+type RequestPasswordResetSuccess {
+	"""
+	Human readable success message.
+	"""
+	message: String!
+}
+
+"""
+The request sudo mode with authenticator app payload.
+"""
+union RequestSudoModeWithAuthenticatorPayload = Account | InvalidCredentialsError | InvalidCaptchaTokenError | AuthenticatorNotEnabledError
+
+"""
+The request sudo mode with passkey payload.
+"""
+union RequestSudoModeWithPasskeyPayload =
+	| Account
+	| InvalidPasskeyAuthenticationCredentialError
+	| InvalidCaptchaTokenError
+	| WebAuthnChallengeNotFoundError
+
+"""
+The request sudo mode with password payload.
+"""
+union RequestSudoModeWithPasswordPayload =
+	| Account
+	| InvalidCredentialsError
+	| InvalidCaptchaTokenError
+	| InvalidAuthenticationProviderError
+	| TwoFactorAuthenticationRequiredError
+
+"""
+The reset password payload.
+"""
+union ResetPasswordPayload =
+	| Account
+	| InvalidPasswordResetTokenError
+	| PasswordNotStrongError
+	| TwoFactorAuthenticationChallengeNotFoundError
+
+"""
+The register with passkey payload.
+"""
+union RegisterWithPasskeyPayload =
+	| Account
+	| EmailInUseError
+	| InvalidEmailVerificationTokenError
+	| InvalidCaptchaTokenError
+	| InvalidPasskeyRegistrationCredentialError
+
+"""
+The register with password payload.
+"""
+union RegisterWithPasswordPayload =
+	| Account
+	| EmailInUseError
+	| InvalidEmailVerificationTokenError
+	| InvalidCaptchaTokenError
+	| PasswordNotStrongError
+
+"""
+The update password payload.
+"""
+union UpdatePasswordPayload = Account | PasswordNotStrongError
+
+
+"""
+The update webauthn credential payload.
+"""
+union UpdateWebAuthnCredentialPayload = WebAuthnCredential | WebAuthnCredentialNotFoundError
+
+
+extend type Mutation {
+	"""
+	Request an email verification token.
+	"""
+	requestEmailVerificationToken(
+		"""
+		The email to request an email verification token for.
+		"""
+		email: String!
+
+		"""
+		The captcha token to verify the user request.
+		"""
+		captchaToken: String!
+	): RequestEmailVerificationTokenPayload!
+
+	"""
+	Verify an email.
+	"""
+	verifyEmail(
+		"""
+		The email to request an email verification token for.
+		"""
+		email: String!
+
+		"""
+		The email verification token.
+		"""
+		emailVerificationToken: String!
+
+		"""
+		The captcha token to verify the user request.
+		"""
+		captchaToken: String!
+	): VerifyEmailPayload!
+
+	"""
+	Register a new user with a password.
+	"""
+	registerWithPassword(
+		"""
+		The email of the new user.
+		"""
+		email: String!
+
+		"""
+		The email verification token.
+		"""
+		emailVerificationToken: String!
+
+		"""
+		The password of the new user.
+		"""
+		password: String!
+
+		"""
+		The full name of the new user.
+		"""
+		fullName: String!
+
+		"""
+		The captcha token to verify the user request.
+		"""
+		captchaToken: String!
+	): RegisterWithPasswordPayload!
+
+	"""
+	Generate registration options for registering via a passkey.
+	"""
+	generatePasskeyRegistrationOptions(
+		"""
+		The email of the new user.
+		"""
+		email: String!
+
+		"""
+		The full name of the new user.
+		"""
+		fullName: String!
+
+		"""
+		The captcha token to verify the user request.
+		"""
+		captchaToken: String!
+	): GeneratePasskeyRegistrationOptionsPayload!
+
+	"""
+	Register a new user with a passkey.
+	"""
+	registerWithPasskey(
+		"""
+		The email of the new user.
+		"""
+		email: String!
+
+		"""
+		The email verification token.
+		"""
+		emailVerificationToken: String!
+
+		"""
+		The passkey registration response of the new user.
+		"""
+		passkeyRegistrationResponse: JSON!
+
+		"""
+		The nickname of the passkey.
+		"""
+		passkeyNickname: String!
+
+		"""
+		The full name of the new user.
+		"""
+		fullName: String!
+
+		"""
+		The captcha token to verify the user request.
+		"""
+		captchaToken: String!
+	): RegisterWithPasskeyPayload!
+
+	"""
+	Generate authentication options.
+	"""
+	generateAuthenticationOptions(
+		"""
+		The captcha token to verify the user request.
+		"""
+		captchaToken: String!
+	): GenerateAuthenticationOptionsPayload!
+
+	"""
+	Generate reauthentication options (for sudo mode requests).
+	"""
+	generateReauthenticationOptions(
+		"""
+		The captcha token to verify the user request.
+		"""
+		captchaToken: String!
+	): GenerateAuthenticationOptionsPayload!
+
+	"""
+	Log in a user with a passkey.
+	"""
+	loginWithPasskey(
+		"""
+		The authentication response of the user.
+		"""
+		authenticationResponse: JSON!
+
+		"""
+		The captcha token to verify the user request.
+		"""
+		captchaToken: String!
+	): LoginWithPasskeyPayload!
+
+	"""
+	Log in a user with email and password.
+	"""
+	loginWithPassword(
+		"""
+		The email/ phone number of the user.
+		"""
+		login: String!
+
+		"""
+		The password of the user.
+		"""
+		password: String!
+
+		"""
+		The captcha token to verify the user request.
+		"""
+		captchaToken: String!
+	): LoginWithPasswordPayload!
+
+	"""
+	Log out the current user.
+	"""
+	logout: LogoutPayload! @isAuthenticated
+
+	"""
+	Request a password reset.
+	"""
+	requestPasswordReset(
+		"""
+		The email of the existing user.
+		"""
+		email: String!
+
+		"""
+		The captcha token to verify the user request.
+		"""
+		captchaToken: String!
+	): RequestPasswordResetPayload!
+
+	"""
+	Verify a 2FA challenge for password reset using an authenticator app.
+	"""
+	verify2faPasswordResetWithAuthenticator(
+		"""
+		The email of the existing user.
+		"""
+		email: String!
+
+		"""
+		The password reset token.
+		"""
+		passwordResetToken: String!
+
+		"""
+		The 2FA token to verify password reset.
+		"""
+		twoFactorToken: String!
+
+		"""
+		The captcha token to verify the user request.
+		"""
+		captchaToken: String!
+	): Verify2FAPasswordResetWithAuthenticatorPayload!
+
+	"""
+	Verify a 2FA challenge for password reset using a passkey.
+	"""
+	verify2faPasswordResetWithPasskey(
+		"""
+		The email of the existing user.
+		"""
+		email: String!
+
+		"""
+		The password reset token.
+		"""
+		passwordResetToken: String!
+
+		"""
+		The passkey authentication response to verify password reset.
+		"""
+		authenticationResponse: JSON!
+
+		"""
+		The captcha token to verify the user request.
+		"""
+		captchaToken: String!
+	): Verify2FAPasswordResetWithPasskeyPayload!
+
+	"""
+	Reset a user's password.
+	"""
+	resetPassword(
+		"""
+		The email of the existing user.
+		"""
+		email: String!
+
+		"""
+		The password reset token.
+		"""
+		passwordResetToken: String!
+
+		"""
+		The new password.
+		"""
+		newPassword: String!
+	): ResetPasswordPayload!
+
+	"""
+	Update the current user's password.
+	"""
+	updatePassword(
+		"""
+		The new password.
+		"""
+		newPassword: String!
+	): UpdatePasswordPayload! @isAuthenticated @requiresSudoMode
+
+	"""
+	Delete the current user's password.
+	"""
+	deletePassword: DeletePasswordPayload! @isAuthenticated @requiresSudoMode
+
+	"""
+	Delete other sessions of the viewer than the current one.
+	"""
+	deleteOtherSessions: DeleteOtherSessionsPayload! @isAuthenticated @requiresSudoMode
+
+	"""
+	Delete session by ID.
+	"""
+	deleteSession(
+		"""
+		The ID of the session to delete.
+		"""
+		sessionId: ID!
+	): DeleteSessionPayload! @isAuthenticated @requiresSudoMode
+
+	"""
+	Delete webauthn credential by ID.
+	"""
+	deleteWebAuthnCredential(
+		"""
+		The ID of the Webauthn credential to delete.
+		"""
+		webAuthnCredentialId: ID!
+	): DeleteWebAuthnCredentialPayload! @isAuthenticated @requiresSudoMode
+
+	"""
+	Delete webauthn credential by ID.
+	"""
+	updateWebAuthnCredential(
+		"""
+		The ID of the Webauthn credential to update.
+		"""
+		webAuthnCredentialId: ID!
+
+		"""
+		The nickname of the passkey.
+		"""
+		nickname: String!
+	): UpdateWebAuthnCredentialPayload! @isAuthenticated
+
+	"""
+	Generate registration options for adding a webauthn credential.
+	"""
+	generateWebAuthnCredentialCreationOptions: GeneratePasskeyCreationOptionsPayload! @isAuthenticated @requiresSudoMode
+
+	"""
+	Create a new webauthn credential for the current user.
+	"""
+	createWebAuthnCredential(
+		"""
+		The passkey registration response.
+		"""
+		passkeyRegistrationResponse: JSON!
+
+		"""
+		The nickname of the passkey.
+		"""
+		nickname: String!
+	): CreateWebAuthnCredentialPayload! @isAuthenticated @requiresSudoMode
+
+	"""
+	Request a sudo mode grant for the current user using a passkey.
+	"""
+	requestSudoModeWithPasskey(
+		"""
+		The authentication response of the user.
+		"""
+		authenticationResponse: JSON!
+
+		"""
+		The captcha token to verify the user request.
+		"""
+		captchaToken: String!
+	): RequestSudoModeWithPasskeyPayload! @isAuthenticated
+
+	"""
+	Request a sudo mode grant for the current user using a password.
+	"""
+	requestSudoModeWithPassword(
+		"""
+		The password of the user.
+		"""
+		password: String!
+
+		"""
+		The captcha token to verify the user request.
+		"""
+		captchaToken: String!
+	): RequestSudoModeWithPasswordPayload! @isAuthenticated
+
+	"""
+	Request a sudo mode grant for the current user using an authenticator app.
+	"""
+	requestSudoModeWithAuthenticator(
+		"""
+		The 2FA token of the user.
+		"""
+		twoFactorToken: String!
+
+		"""
+		The captcha token to verify the user request.
+		"""
+		captchaToken: String!
+	): RequestSudoModeWithAuthenticatorPayload! @isAuthenticated
+
+	"""
+	Enable account 2FA with authenticator.
+	"""
+	enableAccount2faWithAuthenticator(
+		"""
+		The 2FA token.
+		"""
+		token: String!
+	): SetAccount2FAPayload! @isAuthenticated @requiresSudoMode
+
+	"""
+	Disable two factor authentication with authenticator app.
+	"""
+	disableAccount2faWithAuthenticator: DisableAccount2FAWithAuthenticatorPayload! @isAuthenticated @requiresSudoMode
+
+	"""
+	Generate an account 2FA challenge to setup an authenticator.
+	"""
+	generateAuthenticator2faChallenge: GenerateAuthenticator2FAChallengePayload! @isAuthenticated @requiresSudoMode
+
+	"""
+	Verify Account 2FA challenge with an authenticator.
+	"""
+	verify2faWithAuthenticator(
+		"""
+		The 2FA token.
+		"""
+		token: String!
+
+		"""
+		The captcha token to verify the user request.
+		"""
+		captchaToken: String!
+	): Verify2FAWithAuthenticatorPayload!
+
+	"""
+	Verify Account 2FA with a recovery code.
+	"""
+	verify2faWithRecoveryCode(
+		"""
+		The 2FA token.
+		"""
+		token: String!
+
+		"""
+		The captcha token to verify the user request.
+		"""
+		captchaToken: String!
+	): Verify2FAWithRecoveryCodePayload!
+
+	"""
+	Generate 2FA recovery codes for the current user.
+	"""
+	generate2faRecoveryCodes: Generate2FARecoveryCodesPayload! @isAuthenticated @requiresSudoMode
+
+	"""
+	Verify the given Google (one-tap) token.
+	"""
+	verifyGoogleToken(
+		"""
+		The Google (one-tap) credential token.
+		"""
+		token: String!
+	): VerifyGoogleTokenPayload!
+}
+`, BuiltIn: false},
+	{Name: "../schema/core.graphqls", Input: `"""
+An object with a Globally Unique ID
+"""
+interface Node {
+	"""
+	The Globally Unique ID of this object
+	"""
+	id: ID!
+}
+
+
+"""
+Human readable error.
+"""
+interface Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+"""
+Used when an invalid captcha token is provided.
+"""
+type InvalidCaptchaTokenError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+type NotAuthenticatedError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+"""
+Information to aid in pagination.
+"""
+type PageInfo {
+	"""
+	When paginating forwards, are there more items?
+	"""
+	hasNextPage: Boolean!
+
+	"""
+	When paginating backwards, are there more items?
+	"""
+	hasPreviousPage: Boolean!
+
+	"""
+	When paginating backwards, the cursor to continue.
+	"""
+	startCursor: String
+
+	"""
+	When paginating forwards, the cursor to continue.
+	"""
+	endCursor: String
+}
+
+"""
+The payload for creating a presigned URL.
+"""
+type CreatePresignedURLPayloadType {
+	"""
+	The presigned URL.
+	"""
+	presignedUrl: String!
+}
+
+
+type Query {
   _empty: String
 }
 
@@ -194,5 +3210,22 @@ type Mutation {
   _empty: String
 }
 `, BuiltIn: false},
+	{Name: "../schema/directives.graphqls", Input: `directive @isAuthenticated on FIELD_DEFINITION
+
+directive @requiresSudoMode on FIELD_DEFINITION`, BuiltIn: false},
+	{Name: "../schema/scalars.graphqls", Input: `"""
+Date (isoformat)
+"""
+scalar Date
+
+"""
+DateTime scalar represents an ISO 8601-encoded date and time string.
+"""
+scalar DateTime
+
+"""
+The ` + "`" + `JSON` + "`" + ` scalar type represents JSON values as specified by [ECMA-404](https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf).
+"""
+scalar JSON @specifiedBy(url: "https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf")`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)

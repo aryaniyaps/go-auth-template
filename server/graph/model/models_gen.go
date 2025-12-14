@@ -2,8 +2,1280 @@
 
 package model
 
+import (
+	"bytes"
+	"fmt"
+	"io"
+	"strconv"
+)
+
+// The create webauthn credential payload.
+type CreateWebAuthnCredentialPayload interface {
+	IsCreateWebAuthnCredentialPayload()
+}
+
+// The delete password payload.
+type DeletePasswordPayload interface {
+	IsDeletePasswordPayload()
+}
+
+// The delete session payload.
+type DeleteSessionPayload interface {
+	IsDeleteSessionPayload()
+}
+
+// The delete webauthn credential payload.
+type DeleteWebAuthnCredentialPayload interface {
+	IsDeleteWebAuthnCredentialPayload()
+}
+
+// The disable account 2FA payload.
+type DisableAccount2FAWithAuthenticatorPayload interface {
+	IsDisableAccount2FAWithAuthenticatorPayload()
+}
+
+// Human readable error.
+type Error interface {
+	IsError()
+	// Human readable error message.
+	GetMessage() string
+}
+
+// The generate 2FA recovery codes payload.
+type Generate2FARecoveryCodesPayload interface {
+	IsGenerate2FARecoveryCodesPayload()
+}
+
+// The generate authentication options payload.
+type GenerateAuthenticationOptionsPayload interface {
+	IsGenerateAuthenticationOptionsPayload()
+}
+
+// The generate authenticator 2FA challenge payload.
+type GenerateAuthenticator2FAChallengePayload interface {
+	IsGenerateAuthenticator2FAChallengePayload()
+}
+
+// The generate passkey creation options payload.
+type GeneratePasskeyCreationOptionsPayload interface {
+	IsGeneratePasskeyCreationOptionsPayload()
+}
+
+// The generate passkey registration options payload.
+type GeneratePasskeyRegistrationOptionsPayload interface {
+	IsGeneratePasskeyRegistrationOptionsPayload()
+}
+
+// The login with passkey payload.
+type LoginWithPasskeyPayload interface {
+	IsLoginWithPasskeyPayload()
+}
+
+// The login with password payload.
+type LoginWithPasswordPayload interface {
+	IsLoginWithPasswordPayload()
+}
+
+// An object with a Globally Unique ID
+type Node interface {
+	IsNode()
+	// The Globally Unique ID of this object
+	GetID() string
+}
+
+// The password reset token payload.
+type PasswordResetTokenPayload interface {
+	IsPasswordResetTokenPayload()
+}
+
+// The register with passkey payload.
+type RegisterWithPasskeyPayload interface {
+	IsRegisterWithPasskeyPayload()
+}
+
+// The register with password payload.
+type RegisterWithPasswordPayload interface {
+	IsRegisterWithPasswordPayload()
+}
+
+// The remove account phone number payload.
+type RemoveAccountPhoneNumberPayload interface {
+	IsRemoveAccountPhoneNumberPayload()
+}
+
+// The request email verification token payload.
+type RequestEmailVerificationTokenPayload interface {
+	IsRequestEmailVerificationTokenPayload()
+}
+
+// The request password reset payload.
+type RequestPasswordResetPayload interface {
+	IsRequestPasswordResetPayload()
+}
+
+// The create phone number verification token payload.
+type RequestPhoneNumberVerificationTokenPayload interface {
+	IsRequestPhoneNumberVerificationTokenPayload()
+}
+
+// The request sudo mode with authenticator app payload.
+type RequestSudoModeWithAuthenticatorPayload interface {
+	IsRequestSudoModeWithAuthenticatorPayload()
+}
+
+// The request sudo mode with passkey payload.
+type RequestSudoModeWithPasskeyPayload interface {
+	IsRequestSudoModeWithPasskeyPayload()
+}
+
+// The request sudo mode with password payload.
+type RequestSudoModeWithPasswordPayload interface {
+	IsRequestSudoModeWithPasswordPayload()
+}
+
+// The reset password payload.
+type ResetPasswordPayload interface {
+	IsResetPasswordPayload()
+}
+
+// The enable account 2FA with authenticator payload.
+type SetAccount2FAPayload interface {
+	IsSetAccount2FAPayload()
+}
+
+// The update account payload.
+type UpdateAccountPayload interface {
+	IsUpdateAccountPayload()
+}
+
+// The update account phone number payload.
+type UpdateAccountPhoneNumberPayload interface {
+	IsUpdateAccountPhoneNumberPayload()
+}
+
+// The update password payload.
+type UpdatePasswordPayload interface {
+	IsUpdatePasswordPayload()
+}
+
+// The update webauthn credential payload.
+type UpdateWebAuthnCredentialPayload interface {
+	IsUpdateWebAuthnCredentialPayload()
+}
+
+// The verify 2FA password reset with authenticator payload.
+type Verify2FAPasswordResetWithAuthenticatorPayload interface {
+	IsVerify2FAPasswordResetWithAuthenticatorPayload()
+}
+
+// The verify 2FA password reset with passkey payload.
+type Verify2FAPasswordResetWithPasskeyPayload interface {
+	IsVerify2FAPasswordResetWithPasskeyPayload()
+}
+
+// The verify 2FA with authenticator payload.
+type Verify2FAWithAuthenticatorPayload interface {
+	IsVerify2FAWithAuthenticatorPayload()
+}
+
+// The verify 2FA with recovery code payload.
+type Verify2FAWithRecoveryCodePayload interface {
+	IsVerify2FAWithRecoveryCodePayload()
+}
+
+// The verify email payload.
+type VerifyEmailPayload interface {
+	IsVerifyEmailPayload()
+}
+
+// The verify Google (one-tap) token payload.
+type VerifyGoogleTokenPayload interface {
+	IsVerifyGoogleTokenPayload()
+}
+
+// The viewer payload.
+type ViewerPayload interface {
+	IsViewerPayload()
+}
+
+// An account.
+type Account struct {
+	// The Globally Unique ID of this object
+	ID string `json:"id"`
+	// The full name of the account.
+	FullName string `json:"fullName"`
+	// The email of the account.
+	Email string `json:"email"`
+	// The avatar URL of the account.
+	AvatarURL string `json:"avatarUrl"`
+	// The phone number of the account.
+	PhoneNumber *string `json:"phoneNumber,omitempty"`
+	// When the account was last updated.
+	UpdatedAt *string `json:"updatedAt,omitempty"`
+	// The authentication providers supported by the account.
+	AuthProviders []AuthProvider `json:"authProviders"`
+	// Available 2FA providers for the account.
+	TwoFactorProviders []TwoFactorProvider `json:"twoFactorProviders"`
+	// Whether the account has 2FA enabled.
+	Has2faEnabled bool `json:"has2faEnabled"`
+	// The terms and policy of the account.
+	TermsAndPolicy *TermsAndPolicy `json:"termsAndPolicy"`
+	// The analytics preference of the account.
+	AnalyticsPreference *AnalyticsPreference `json:"analyticsPreference"`
+	// When the user's sudo mode grant expires at.
+	SudoModeExpiresAt *string `json:"sudoModeExpiresAt,omitempty"`
+	// The session for the current user.
+	CurrentSession *Session `json:"currentSession"`
+	// The sessions for the account.
+	Sessions *SessionConnection `json:"sessions"`
+	// The webauthn credentials for the account.
+	WebAuthnCredentials *WebAuthnCredentialConnection `json:"webAuthnCredentials"`
+}
+
+func (Account) IsNode() {}
+
+// The Globally Unique ID of this object
+func (this Account) GetID() string { return this.ID }
+
+func (Account) IsRemoveAccountPhoneNumberPayload() {}
+
+func (Account) IsDeletePasswordPayload() {}
+
+func (Account) IsDisableAccount2FAWithAuthenticatorPayload() {}
+
+func (Account) IsLoginWithPasskeyPayload() {}
+
+func (Account) IsLoginWithPasswordPayload() {}
+
+func (Account) IsVerify2FAWithAuthenticatorPayload() {}
+
+func (Account) IsVerify2FAWithRecoveryCodePayload() {}
+
+func (Account) IsVerifyGoogleTokenPayload() {}
+
+func (Account) IsViewerPayload() {}
+
+func (Account) IsUpdateAccountPayload() {}
+
+func (Account) IsUpdateAccountPhoneNumberPayload() {}
+
+func (Account) IsRequestSudoModeWithAuthenticatorPayload() {}
+
+func (Account) IsRequestSudoModeWithPasskeyPayload() {}
+
+func (Account) IsRequestSudoModeWithPasswordPayload() {}
+
+func (Account) IsResetPasswordPayload() {}
+
+func (Account) IsRegisterWithPasskeyPayload() {}
+
+func (Account) IsRegisterWithPasswordPayload() {}
+
+func (Account) IsUpdatePasswordPayload() {}
+
+// The analytics preference.
+type AnalyticsPreference struct {
+	Type      AnalyticsPreferenceType `json:"type"`
+	UpdatedAt string                  `json:"updatedAt"`
+}
+
+// Used when the authenticator 2FA method is not enabled.
+type AuthenticatorNotEnabledError struct {
+	// Human readable error message.
+	Message string `json:"message"`
+}
+
+func (AuthenticatorNotEnabledError) IsError() {}
+
+// Human readable error message.
+func (this AuthenticatorNotEnabledError) GetMessage() string { return this.Message }
+
+func (AuthenticatorNotEnabledError) IsDisableAccount2FAWithAuthenticatorPayload() {}
+
+func (AuthenticatorNotEnabledError) IsVerify2FAPasswordResetWithAuthenticatorPayload() {}
+
+func (AuthenticatorNotEnabledError) IsVerify2FAWithAuthenticatorPayload() {}
+
+func (AuthenticatorNotEnabledError) IsRequestSudoModeWithAuthenticatorPayload() {}
+
+// The payload for creating a presigned URL.
+type CreatePresignedURLPayloadType struct {
+	// The presigned URL.
+	PresignedURL string `json:"presignedUrl"`
+}
+
+// Create webauthn credential success.
+type CreateWebAuthnCredentialSuccess struct {
+	// The created webauthn credential edge.
+	WebAuthnCredentialEdge *WebAuthnCredentialEdge `json:"webAuthnCredentialEdge"`
+}
+
+func (CreateWebAuthnCredentialSuccess) IsCreateWebAuthnCredentialPayload() {}
+
+// The delete other sessions payload.
+type DeleteOtherSessionsPayload struct {
+	// Deleted session IDs.
+	DeletedSessionIds []string `json:"deletedSessionIds"`
+}
+
+// Delete session success.
+type DeleteSessionSuccess struct {
+	// The Deleted session edge.
+	SessionEdge *SessionEdge `json:"sessionEdge"`
+}
+
+func (DeleteSessionSuccess) IsDeleteSessionPayload() {}
+
+// Delete webauthn credential success.
+type DeleteWebAuthnCredentialSuccess struct {
+	// The Deleted webauthn credential edge.
+	WebAuthnCredentialEdge *WebAuthnCredentialEdge `json:"webAuthnCredentialEdge"`
+}
+
+func (DeleteWebAuthnCredentialSuccess) IsDeleteWebAuthnCredentialPayload() {}
+
+// Used when the email address is in use.
+type EmailInUseError struct {
+	// Human readable error message.
+	Message string `json:"message"`
+}
+
+func (EmailInUseError) IsError() {}
+
+// Human readable error message.
+func (this EmailInUseError) GetMessage() string { return this.Message }
+
+func (EmailInUseError) IsGeneratePasskeyRegistrationOptionsPayload() {}
+
+func (EmailInUseError) IsRequestEmailVerificationTokenPayload() {}
+
+func (EmailInUseError) IsVerifyEmailPayload() {}
+
+func (EmailInUseError) IsRegisterWithPasskeyPayload() {}
+
+func (EmailInUseError) IsRegisterWithPasswordPayload() {}
+
+// Used when the email verification token cooldown is active.
+type EmailVerificationTokenCooldownError struct {
+	// Human readable error message.
+	Message          string `json:"message"`
+	RemainingSeconds int32  `json:"remainingSeconds"`
+}
+
+func (EmailVerificationTokenCooldownError) IsError() {}
+
+// Human readable error message.
+func (this EmailVerificationTokenCooldownError) GetMessage() string { return this.Message }
+
+func (EmailVerificationTokenCooldownError) IsRequestEmailVerificationTokenPayload() {}
+
+// Enable account 2FA with authenticator success.
+type EnableAccount2FAWithAuthenticatorSuccess struct {
+	// The account with 2FA enabled.
+	Account *Account `json:"account"`
+	// The recovery codes for the account.
+	RecoveryCodes []string `json:"recoveryCodes"`
+}
+
+func (EnableAccount2FAWithAuthenticatorSuccess) IsSetAccount2FAPayload() {}
+
+// Generate 2FA recovery codes success.
+type Generate2FARecoveryCodesSuccess struct {
+	// The generated 2FA recovery codes.
+	RecoveryCodes []string `json:"recoveryCodes"`
+}
+
+func (Generate2FARecoveryCodesSuccess) IsGenerate2FARecoveryCodesPayload() {}
+
+// Generate authentication options success.
+type GenerateAuthenticationOptionsSuccess struct {
+	// Passkey authentication options.
+	AuthenticationOptions string `json:"authenticationOptions"`
+}
+
+func (GenerateAuthenticationOptionsSuccess) IsGenerateAuthenticationOptionsPayload() {}
+
+// Generate account 2FA Challenge success.
+type GenerateAuthenticator2FAChallengeSuccess struct {
+	// The generated 2FA OTP URI.
+	OtpURI string `json:"otpUri"`
+	// The generated 2FA secret.
+	Secret string `json:"secret"`
+}
+
+func (GenerateAuthenticator2FAChallengeSuccess) IsGenerateAuthenticator2FAChallengePayload() {}
+
+// Generate passkey creation options success.
+type GeneratePasskeyCreationOptionsSuccess struct {
+	// Passkey registration options for new passkey creation.
+	RegistrationOptions string `json:"registrationOptions"`
+}
+
+func (GeneratePasskeyCreationOptionsSuccess) IsGeneratePasskeyCreationOptionsPayload() {}
+
+// Generate passkey registration options success.
+type GeneratePasskeyRegistrationOptionsSuccess struct {
+	// Passkey registration options.
+	RegistrationOptions string `json:"registrationOptions"`
+}
+
+func (GeneratePasskeyRegistrationOptionsSuccess) IsGeneratePasskeyRegistrationOptionsPayload() {}
+
+// Used when at least one authentication provider must be enabled.
+type InsufficientAuthProvidersError struct {
+	// Human readable error message.
+	Message string `json:"message"`
+}
+
+func (InsufficientAuthProvidersError) IsDeletePasswordPayload() {}
+
+func (InsufficientAuthProvidersError) IsDeleteWebAuthnCredentialPayload() {}
+
+func (InsufficientAuthProvidersError) IsError() {}
+
+// Human readable error message.
+func (this InsufficientAuthProvidersError) GetMessage() string { return this.Message }
+
+// Used when an invalid authentication provider is used.
+type InvalidAuthenticationProviderError struct {
+	// Human readable error message.
+	Message string `json:"message"`
+	// Available authentication providers for the account.
+	AvailableProviders []AuthProvider `json:"availableProviders"`
+}
+
+func (InvalidAuthenticationProviderError) IsError() {}
+
+// Human readable error message.
+func (this InvalidAuthenticationProviderError) GetMessage() string { return this.Message }
+
+func (InvalidAuthenticationProviderError) IsLoginWithPasswordPayload() {}
+
+func (InvalidAuthenticationProviderError) IsRequestSudoModeWithPasswordPayload() {}
+
+// Used when an invalid captcha token is provided.
+type InvalidCaptchaTokenError struct {
+	// Human readable error message.
+	Message string `json:"message"`
+}
+
+func (InvalidCaptchaTokenError) IsGenerateAuthenticationOptionsPayload() {}
+
+func (InvalidCaptchaTokenError) IsGeneratePasskeyRegistrationOptionsPayload() {}
+
+func (InvalidCaptchaTokenError) IsLoginWithPasskeyPayload() {}
+
+func (InvalidCaptchaTokenError) IsLoginWithPasswordPayload() {}
+
+func (InvalidCaptchaTokenError) IsRequestEmailVerificationTokenPayload() {}
+
+func (InvalidCaptchaTokenError) IsVerify2FAPasswordResetWithAuthenticatorPayload() {}
+
+func (InvalidCaptchaTokenError) IsVerify2FAPasswordResetWithPasskeyPayload() {}
+
+func (InvalidCaptchaTokenError) IsVerify2FAWithAuthenticatorPayload() {}
+
+func (InvalidCaptchaTokenError) IsVerify2FAWithRecoveryCodePayload() {}
+
+func (InvalidCaptchaTokenError) IsVerifyEmailPayload() {}
+
+func (InvalidCaptchaTokenError) IsRequestPasswordResetPayload() {}
+
+func (InvalidCaptchaTokenError) IsRequestSudoModeWithAuthenticatorPayload() {}
+
+func (InvalidCaptchaTokenError) IsRequestSudoModeWithPasskeyPayload() {}
+
+func (InvalidCaptchaTokenError) IsRequestSudoModeWithPasswordPayload() {}
+
+func (InvalidCaptchaTokenError) IsRegisterWithPasskeyPayload() {}
+
+func (InvalidCaptchaTokenError) IsRegisterWithPasswordPayload() {}
+
+func (InvalidCaptchaTokenError) IsError() {}
+
+// Human readable error message.
+func (this InvalidCaptchaTokenError) GetMessage() string { return this.Message }
+
+// Used when invalid credentials are provided.
+type InvalidCredentialsError struct {
+	// Human readable error message.
+	Message string `json:"message"`
+}
+
+func (InvalidCredentialsError) IsError() {}
+
+// Human readable error message.
+func (this InvalidCredentialsError) GetMessage() string { return this.Message }
+
+func (InvalidCredentialsError) IsLoginWithPasswordPayload() {}
+
+func (InvalidCredentialsError) IsSetAccount2FAPayload() {}
+
+func (InvalidCredentialsError) IsVerify2FAPasswordResetWithAuthenticatorPayload() {}
+
+func (InvalidCredentialsError) IsVerify2FAWithAuthenticatorPayload() {}
+
+func (InvalidCredentialsError) IsVerify2FAWithRecoveryCodePayload() {}
+
+func (InvalidCredentialsError) IsVerifyGoogleTokenPayload() {}
+
+func (InvalidCredentialsError) IsRequestSudoModeWithAuthenticatorPayload() {}
+
+func (InvalidCredentialsError) IsRequestSudoModeWithPasswordPayload() {}
+
+// Used when an invalid email address is provided.
+type InvalidEmailError struct {
+	// Human readable error message.
+	Message string `json:"message"`
+}
+
+func (InvalidEmailError) IsError() {}
+
+// Human readable error message.
+func (this InvalidEmailError) GetMessage() string { return this.Message }
+
+func (InvalidEmailError) IsRequestEmailVerificationTokenPayload() {}
+
+func (InvalidEmailError) IsVerifyGoogleTokenPayload() {}
+
+// Used when an invalid email verification token is provided.
+type InvalidEmailVerificationTokenError struct {
+	// Human readable error message.
+	Message string `json:"message"`
+}
+
+func (InvalidEmailVerificationTokenError) IsError() {}
+
+// Human readable error message.
+func (this InvalidEmailVerificationTokenError) GetMessage() string { return this.Message }
+
+func (InvalidEmailVerificationTokenError) IsVerifyEmailPayload() {}
+
+func (InvalidEmailVerificationTokenError) IsRegisterWithPasskeyPayload() {}
+
+func (InvalidEmailVerificationTokenError) IsRegisterWithPasswordPayload() {}
+
+// Used when an invalid passkey authentication credential is provided.
+type InvalidPasskeyAuthenticationCredentialError struct {
+	// Human readable error message.
+	Message string `json:"message"`
+}
+
+func (InvalidPasskeyAuthenticationCredentialError) IsError() {}
+
+// Human readable error message.
+func (this InvalidPasskeyAuthenticationCredentialError) GetMessage() string { return this.Message }
+
+func (InvalidPasskeyAuthenticationCredentialError) IsLoginWithPasskeyPayload() {}
+
+func (InvalidPasskeyAuthenticationCredentialError) IsVerify2FAPasswordResetWithPasskeyPayload() {}
+
+func (InvalidPasskeyAuthenticationCredentialError) IsRequestSudoModeWithPasskeyPayload() {}
+
+// Used when an invalid passkey registration credential is provided.
+type InvalidPasskeyRegistrationCredentialError struct {
+	// Human readable error message.
+	Message string `json:"message"`
+}
+
+func (InvalidPasskeyRegistrationCredentialError) IsCreateWebAuthnCredentialPayload() {}
+
+func (InvalidPasskeyRegistrationCredentialError) IsError() {}
+
+// Human readable error message.
+func (this InvalidPasskeyRegistrationCredentialError) GetMessage() string { return this.Message }
+
+func (InvalidPasskeyRegistrationCredentialError) IsRegisterWithPasskeyPayload() {}
+
+// Used when an invalid password reset token is provided.
+type InvalidPasswordResetTokenError struct {
+	// Human readable error message.
+	Message string `json:"message"`
+}
+
+func (InvalidPasswordResetTokenError) IsError() {}
+
+// Human readable error message.
+func (this InvalidPasswordResetTokenError) GetMessage() string { return this.Message }
+
+func (InvalidPasswordResetTokenError) IsVerify2FAPasswordResetWithAuthenticatorPayload() {}
+
+func (InvalidPasswordResetTokenError) IsVerify2FAPasswordResetWithPasskeyPayload() {}
+
+func (InvalidPasswordResetTokenError) IsResetPasswordPayload() {}
+
+type InvalidPhoneNumberError struct {
+	// Human readable error message.
+	Message string `json:"message"`
+}
+
+func (InvalidPhoneNumberError) IsError() {}
+
+// Human readable error message.
+func (this InvalidPhoneNumberError) GetMessage() string { return this.Message }
+
+func (InvalidPhoneNumberError) IsRequestPhoneNumberVerificationTokenPayload() {}
+
+func (InvalidPhoneNumberError) IsUpdateAccountPhoneNumberPayload() {}
+
+type InvalidPhoneNumberVerificationTokenError struct {
+	// Human readable error message.
+	Message string `json:"message"`
+}
+
+func (InvalidPhoneNumberVerificationTokenError) IsError() {}
+
+// Human readable error message.
+func (this InvalidPhoneNumberVerificationTokenError) GetMessage() string { return this.Message }
+
+func (InvalidPhoneNumberVerificationTokenError) IsUpdateAccountPhoneNumberPayload() {}
+
+// The logout payload.
+type LogoutPayload struct {
+	// Human readable success message.
+	Message string `json:"message"`
+}
+
 type Mutation struct {
 }
 
+type NotAuthenticatedError struct {
+	// Human readable error message.
+	Message string `json:"message"`
+}
+
+func (NotAuthenticatedError) IsViewerPayload() {}
+
+func (NotAuthenticatedError) IsError() {}
+
+// Human readable error message.
+func (this NotAuthenticatedError) GetMessage() string { return this.Message }
+
+// Information to aid in pagination.
+type PageInfo struct {
+	// When paginating forwards, are there more items?
+	HasNextPage bool `json:"hasNextPage"`
+	// When paginating backwards, are there more items?
+	HasPreviousPage bool `json:"hasPreviousPage"`
+	// When paginating backwards, the cursor to continue.
+	StartCursor *string `json:"startCursor,omitempty"`
+	// When paginating forwards, the cursor to continue.
+	EndCursor *string `json:"endCursor,omitempty"`
+}
+
+// Used when the password is not strong enough.
+type PasswordNotStrongError struct {
+	// Human readable error message.
+	Message string `json:"message"`
+}
+
+func (PasswordNotStrongError) IsError() {}
+
+// Human readable error message.
+func (this PasswordNotStrongError) GetMessage() string { return this.Message }
+
+func (PasswordNotStrongError) IsResetPasswordPayload() {}
+
+func (PasswordNotStrongError) IsRegisterWithPasswordPayload() {}
+
+func (PasswordNotStrongError) IsUpdatePasswordPayload() {}
+
+// A password reset token.
+type PasswordResetToken struct {
+	// The Globally Unique ID of this object
+	ID string `json:"id"`
+	// Email address of the password reset token's account.
+	Email string `json:"email"`
+	// Available 2FA providers for the password reset token's account.
+	AuthProviders []AuthProvider `json:"authProviders"`
+	// Available 2FA providers for the password reset token's account.
+	TwoFactorProviders []TwoFactorProvider `json:"twoFactorProviders"`
+	// Whether the password reset token needs 2FA to be used.
+	Needs2fa bool `json:"needs2fa"`
+}
+
+func (PasswordResetToken) IsNode() {}
+
+// The Globally Unique ID of this object
+func (this PasswordResetToken) GetID() string { return this.ID }
+
+func (PasswordResetToken) IsPasswordResetTokenPayload() {}
+
+func (PasswordResetToken) IsVerify2FAPasswordResetWithAuthenticatorPayload() {}
+
+func (PasswordResetToken) IsVerify2FAPasswordResetWithPasskeyPayload() {}
+
+// Used when the password reset token cooldown is active.
+type PasswordResetTokenCooldownError struct {
+	// Human readable error message.
+	Message          string `json:"message"`
+	RemainingSeconds int32  `json:"remainingSeconds"`
+}
+
+func (PasswordResetTokenCooldownError) IsError() {}
+
+// Human readable error message.
+func (this PasswordResetTokenCooldownError) GetMessage() string { return this.Message }
+
+func (PasswordResetTokenCooldownError) IsRequestPasswordResetPayload() {}
+
+// Used when the password reset token is not found.
+type PasswordResetTokenNotFoundError struct {
+	// Human readable error message.
+	Message string `json:"message"`
+}
+
+func (PasswordResetTokenNotFoundError) IsError() {}
+
+// Human readable error message.
+func (this PasswordResetTokenNotFoundError) GetMessage() string { return this.Message }
+
+func (PasswordResetTokenNotFoundError) IsPasswordResetTokenPayload() {}
+
+type PhoneNumberAlreadyExistsError struct {
+	// Human readable error message.
+	Message string `json:"message"`
+}
+
+func (PhoneNumberAlreadyExistsError) IsError() {}
+
+// Human readable error message.
+func (this PhoneNumberAlreadyExistsError) GetMessage() string { return this.Message }
+
+func (PhoneNumberAlreadyExistsError) IsRequestPhoneNumberVerificationTokenPayload() {}
+
+type PhoneNumberDoesNotExistError struct {
+	// Human readable error message.
+	Message string `json:"message"`
+}
+
+func (PhoneNumberDoesNotExistError) IsError() {}
+
+// Human readable error message.
+func (this PhoneNumberDoesNotExistError) GetMessage() string { return this.Message }
+
+func (PhoneNumberDoesNotExistError) IsRemoveAccountPhoneNumberPayload() {}
+
+type PhoneNumberMissingError struct {
+	// Human readable error message.
+	Message string `json:"message"`
+}
+
+func (PhoneNumberMissingError) IsError() {}
+
+// Human readable error message.
+func (this PhoneNumberMissingError) GetMessage() string { return this.Message }
+
+// Used when the phone number verification token cooldown is active.
+type PhoneNumberVerificationTokenCooldownError struct {
+	// Human readable error message.
+	Message          string `json:"message"`
+	RemainingSeconds int32  `json:"remainingSeconds"`
+}
+
+func (PhoneNumberVerificationTokenCooldownError) IsError() {}
+
+// Human readable error message.
+func (this PhoneNumberVerificationTokenCooldownError) GetMessage() string { return this.Message }
+
+func (PhoneNumberVerificationTokenCooldownError) IsRequestPhoneNumberVerificationTokenPayload() {}
+
 type Query struct {
+}
+
+// Request email verification success.
+type RequestEmailVerificationSuccess struct {
+	// Human readable error message.
+	Message string `json:"message"`
+	// Remaining seconds before requesting another email verification token.
+	RemainingSeconds int32 `json:"remainingSeconds"`
+}
+
+func (RequestEmailVerificationSuccess) IsRequestEmailVerificationTokenPayload() {}
+
+// Request password reset success.
+type RequestPasswordResetSuccess struct {
+	// Human readable success message.
+	Message string `json:"message"`
+}
+
+func (RequestPasswordResetSuccess) IsRequestPasswordResetPayload() {}
+
+type RequestPhoneNumberVerificationTokenSuccess struct {
+	// Success message.
+	Message string `json:"message"`
+	// The remaining seconds before the next phone number verification token can be requested.
+	CooldownRemainingSeconds int32 `json:"cooldownRemainingSeconds"`
+}
+
+func (RequestPhoneNumberVerificationTokenSuccess) IsRequestPhoneNumberVerificationTokenPayload() {}
+
+func (RequestPhoneNumberVerificationTokenSuccess) IsError() {}
+
+// Human readable error message.
+func (this RequestPhoneNumberVerificationTokenSuccess) GetMessage() string { return this.Message }
+
+// An account's session.
+type Session struct {
+	// The Globally Unique ID of this object
+	ID string `json:"id"`
+	// User agent of the session.
+	UserAgent string `json:"userAgent"`
+	// IP address of the session.
+	IPAddress string `json:"ipAddress"`
+	// When the session was created.
+	CreatedAt string `json:"createdAt"`
+}
+
+func (Session) IsNode() {}
+
+// The Globally Unique ID of this object
+func (this Session) GetID() string { return this.ID }
+
+type SessionConnection struct {
+	// Information to aid in pagination.
+	PageInfo *PageInfo `json:"pageInfo"`
+	// A list of edges.
+	Edges []*SessionEdge `json:"edges"`
+	// The total number of items in the connection.
+	TotalCount *int32 `json:"totalCount,omitempty"`
+}
+
+type SessionEdge struct {
+	// A cursor for use in pagination
+	Cursor string `json:"cursor"`
+	// The item at the end of the edge
+	Node *Session `json:"node"`
+}
+
+// Used when the session is not found.
+type SessionNotFoundError struct {
+	// Human readable error message.
+	Message string `json:"message"`
+}
+
+func (SessionNotFoundError) IsDeleteSessionPayload() {}
+
+func (SessionNotFoundError) IsError() {}
+
+// Human readable error message.
+func (this SessionNotFoundError) GetMessage() string { return this.Message }
+
+// The terms and policy.
+type TermsAndPolicy struct {
+	Type      TermsAndPolicyType `json:"type"`
+	UpdatedAt string             `json:"updatedAt"`
+	IsLatest  bool               `json:"isLatest"`
+}
+
+// Used when the 2FA challenge is not found.
+type TwoFactorAuthenticationChallengeNotFoundError struct {
+	// Human readable error message.
+	Message string `json:"message"`
+}
+
+func (TwoFactorAuthenticationChallengeNotFoundError) IsSetAccount2FAPayload() {}
+
+func (TwoFactorAuthenticationChallengeNotFoundError) IsError() {}
+
+// Human readable error message.
+func (this TwoFactorAuthenticationChallengeNotFoundError) GetMessage() string { return this.Message }
+
+func (TwoFactorAuthenticationChallengeNotFoundError) IsVerify2FAWithAuthenticatorPayload() {}
+
+func (TwoFactorAuthenticationChallengeNotFoundError) IsVerify2FAWithRecoveryCodePayload() {}
+
+func (TwoFactorAuthenticationChallengeNotFoundError) IsResetPasswordPayload() {}
+
+// Used when 2FA is not enabled for the account.
+type TwoFactorAuthenticationNotEnabledError struct {
+	// Human readable error message.
+	Message string `json:"message"`
+}
+
+func (TwoFactorAuthenticationNotEnabledError) IsGenerate2FARecoveryCodesPayload() {}
+
+func (TwoFactorAuthenticationNotEnabledError) IsError() {}
+
+// Human readable error message.
+func (this TwoFactorAuthenticationNotEnabledError) GetMessage() string { return this.Message }
+
+func (TwoFactorAuthenticationNotEnabledError) IsVerify2FAPasswordResetWithPasskeyPayload() {}
+
+func (TwoFactorAuthenticationNotEnabledError) IsVerify2FAWithRecoveryCodePayload() {}
+
+// Used when 2FA is required.
+type TwoFactorAuthenticationRequiredError struct {
+	// Human readable error message.
+	Message string `json:"message"`
+}
+
+func (TwoFactorAuthenticationRequiredError) IsLoginWithPasswordPayload() {}
+
+func (TwoFactorAuthenticationRequiredError) IsError() {}
+
+// Human readable error message.
+func (this TwoFactorAuthenticationRequiredError) GetMessage() string { return this.Message }
+
+func (TwoFactorAuthenticationRequiredError) IsVerifyGoogleTokenPayload() {}
+
+func (TwoFactorAuthenticationRequiredError) IsRequestSudoModeWithPasswordPayload() {}
+
+// Verify email success.
+type VerifyEmailSuccess struct {
+	// Human readable success message.
+	Message string `json:"message"`
+}
+
+func (VerifyEmailSuccess) IsVerifyEmailPayload() {}
+
+// Used when the WebAuthn challenge is not found.
+type WebAuthnChallengeNotFoundError struct {
+	// Human readable error message.
+	Message string `json:"message"`
+}
+
+func (WebAuthnChallengeNotFoundError) IsLoginWithPasskeyPayload() {}
+
+func (WebAuthnChallengeNotFoundError) IsVerify2FAPasswordResetWithPasskeyPayload() {}
+
+func (WebAuthnChallengeNotFoundError) IsError() {}
+
+// Human readable error message.
+func (this WebAuthnChallengeNotFoundError) GetMessage() string { return this.Message }
+
+func (WebAuthnChallengeNotFoundError) IsRequestSudoModeWithPasskeyPayload() {}
+
+// A WebAuthn Credential belonging to an account.
+type WebAuthnCredential struct {
+	// The Globally Unique ID of this object
+	ID string `json:"id"`
+	// Nickname of the webauthn credential.
+	Nickname string `json:"nickname"`
+	// When the webauthn credential was created.
+	CreatedAt string `json:"createdAt"`
+	// When the webauthn credential was last used.
+	LastUsedAt string `json:"lastUsedAt"`
+}
+
+func (WebAuthnCredential) IsNode() {}
+
+// The Globally Unique ID of this object
+func (this WebAuthnCredential) GetID() string { return this.ID }
+
+func (WebAuthnCredential) IsUpdateWebAuthnCredentialPayload() {}
+
+type WebAuthnCredentialConnection struct {
+	// Information to aid in pagination.
+	PageInfo *PageInfo `json:"pageInfo"`
+	// A list of edges.
+	Edges []*WebAuthnCredentialEdge `json:"edges"`
+	// The total number of items in the connection.
+	TotalCount *int32 `json:"totalCount,omitempty"`
+}
+
+type WebAuthnCredentialEdge struct {
+	// A cursor for use in pagination
+	Cursor string `json:"cursor"`
+	// The item at the end of the edge
+	Node *WebAuthnCredential `json:"node"`
+}
+
+// Used when the webauthn credential is not found.
+type WebAuthnCredentialNotFoundError struct {
+	// Human readable error message.
+	Message string `json:"message"`
+}
+
+func (WebAuthnCredentialNotFoundError) IsDeleteWebAuthnCredentialPayload() {}
+
+func (WebAuthnCredentialNotFoundError) IsError() {}
+
+// Human readable error message.
+func (this WebAuthnCredentialNotFoundError) GetMessage() string { return this.Message }
+
+func (WebAuthnCredentialNotFoundError) IsUpdateWebAuthnCredentialPayload() {}
+
+// The analytics preference input type.
+type AnalyticsPreferenceInputType string
+
+const (
+	AnalyticsPreferenceInputTypeAcceptance AnalyticsPreferenceInputType = "ACCEPTANCE"
+	AnalyticsPreferenceInputTypeRejection  AnalyticsPreferenceInputType = "REJECTION"
+)
+
+var AllAnalyticsPreferenceInputType = []AnalyticsPreferenceInputType{
+	AnalyticsPreferenceInputTypeAcceptance,
+	AnalyticsPreferenceInputTypeRejection,
+}
+
+func (e AnalyticsPreferenceInputType) IsValid() bool {
+	switch e {
+	case AnalyticsPreferenceInputTypeAcceptance, AnalyticsPreferenceInputTypeRejection:
+		return true
+	}
+	return false
+}
+
+func (e AnalyticsPreferenceInputType) String() string {
+	return string(e)
+}
+
+func (e *AnalyticsPreferenceInputType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = AnalyticsPreferenceInputType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid AnalyticsPreferenceInputType", str)
+	}
+	return nil
+}
+
+func (e AnalyticsPreferenceInputType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *AnalyticsPreferenceInputType) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e AnalyticsPreferenceInputType) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+// The analytics preference type.
+type AnalyticsPreferenceType string
+
+const (
+	AnalyticsPreferenceTypeAcceptance AnalyticsPreferenceType = "ACCEPTANCE"
+	AnalyticsPreferenceTypeRejection  AnalyticsPreferenceType = "REJECTION"
+	AnalyticsPreferenceTypeUndecided  AnalyticsPreferenceType = "UNDECIDED"
+)
+
+var AllAnalyticsPreferenceType = []AnalyticsPreferenceType{
+	AnalyticsPreferenceTypeAcceptance,
+	AnalyticsPreferenceTypeRejection,
+	AnalyticsPreferenceTypeUndecided,
+}
+
+func (e AnalyticsPreferenceType) IsValid() bool {
+	switch e {
+	case AnalyticsPreferenceTypeAcceptance, AnalyticsPreferenceTypeRejection, AnalyticsPreferenceTypeUndecided:
+		return true
+	}
+	return false
+}
+
+func (e AnalyticsPreferenceType) String() string {
+	return string(e)
+}
+
+func (e *AnalyticsPreferenceType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = AnalyticsPreferenceType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid AnalyticsPreferenceType", str)
+	}
+	return nil
+}
+
+func (e AnalyticsPreferenceType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *AnalyticsPreferenceType) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e AnalyticsPreferenceType) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+// The authentication provider.
+type AuthProvider string
+
+const (
+	AuthProviderPassword           AuthProvider = "PASSWORD"
+	AuthProviderWebauthnCredential AuthProvider = "WEBAUTHN_CREDENTIAL"
+	AuthProviderOauthGoogle        AuthProvider = "OAUTH_GOOGLE"
+)
+
+var AllAuthProvider = []AuthProvider{
+	AuthProviderPassword,
+	AuthProviderWebauthnCredential,
+	AuthProviderOauthGoogle,
+}
+
+func (e AuthProvider) IsValid() bool {
+	switch e {
+	case AuthProviderPassword, AuthProviderWebauthnCredential, AuthProviderOauthGoogle:
+		return true
+	}
+	return false
+}
+
+func (e AuthProvider) String() string {
+	return string(e)
+}
+
+func (e *AuthProvider) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = AuthProvider(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid AuthProvider", str)
+	}
+	return nil
+}
+
+func (e AuthProvider) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *AuthProvider) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e AuthProvider) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+// The terms and policy type.
+type TermsAndPolicyType string
+
+const (
+	TermsAndPolicyTypeAcceptance TermsAndPolicyType = "ACCEPTANCE"
+	TermsAndPolicyTypeRejection  TermsAndPolicyType = "REJECTION"
+	TermsAndPolicyTypeUndecided  TermsAndPolicyType = "UNDECIDED"
+)
+
+var AllTermsAndPolicyType = []TermsAndPolicyType{
+	TermsAndPolicyTypeAcceptance,
+	TermsAndPolicyTypeRejection,
+	TermsAndPolicyTypeUndecided,
+}
+
+func (e TermsAndPolicyType) IsValid() bool {
+	switch e {
+	case TermsAndPolicyTypeAcceptance, TermsAndPolicyTypeRejection, TermsAndPolicyTypeUndecided:
+		return true
+	}
+	return false
+}
+
+func (e TermsAndPolicyType) String() string {
+	return string(e)
+}
+
+func (e *TermsAndPolicyType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = TermsAndPolicyType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid TermsAndPolicyType", str)
+	}
+	return nil
+}
+
+func (e TermsAndPolicyType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *TermsAndPolicyType) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e TermsAndPolicyType) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+// The two factor provider provider.
+type TwoFactorProvider string
+
+const (
+	TwoFactorProviderAuthenticator TwoFactorProvider = "AUTHENTICATOR"
+)
+
+var AllTwoFactorProvider = []TwoFactorProvider{
+	TwoFactorProviderAuthenticator,
+}
+
+func (e TwoFactorProvider) IsValid() bool {
+	switch e {
+	case TwoFactorProviderAuthenticator:
+		return true
+	}
+	return false
+}
+
+func (e TwoFactorProvider) String() string {
+	return string(e)
+}
+
+func (e *TwoFactorProvider) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = TwoFactorProvider(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid TwoFactorProvider", str)
+	}
+	return nil
+}
+
+func (e TwoFactorProvider) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *TwoFactorProvider) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e TwoFactorProvider) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }
