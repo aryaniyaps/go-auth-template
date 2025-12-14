@@ -1,1 +1,0 @@
-# TODO: move message sender out of account domain
