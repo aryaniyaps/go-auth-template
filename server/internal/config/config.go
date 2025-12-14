@@ -14,6 +14,9 @@ type Config struct {
 
 	DBUrl string `mapstructure:"DB_URL"`
 
+	// JWT Configuration
+	JWTSecret string `mapstructure:"JWT_SECRET"`
+
 	// S3 Configuration
 	S3Bucket    string `mapstructure:"S3_BUCKET"`
 	S3Region    string `mapstructure:"S3_REGION"`
@@ -43,6 +46,9 @@ func SetupConfig() *Config {
 	// Set defaults for S3 configuration
 	viper.SetDefault("S3_REGION", "us-east-1")
 	viper.SetDefault("SMS_PROVIDER", "dummy")
+
+	// Set default for JWT secret in development
+	viper.SetDefault("JWT_SECRET", "development-secret-change-in-production")
 
 	err = viper.Unmarshal(&config)
 	if err != nil {

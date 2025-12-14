@@ -3,12 +3,13 @@
 package main
 
 import (
+	"server/graph"
 	"server/graph/generated"
 	"server/graph/resolver"
 	"server/internal/config"
 	"server/internal/domain/account"
 	"server/internal/domain/auth"
-	"server/internal/http"
+	serverhttp "server/internal/http"
 	"server/internal/infrastructure/db"
 	"server/internal/infrastructure/s3client"
 	"server/internal/logger"
@@ -26,7 +27,15 @@ import (
 )
 
 func AddGraphQLHandler(r *chi.Mux, cfg *config.Config) {
-	srv := handler.New(generated.NewExecutableSchema(generated.Config{Resolvers: &resolver.Resolver{}}))
+	resolver := &resolver.Resolver{}
+
+	srv := handler.New(generated.NewExecutableSchema(generated.Config{
+		Resolvers: resolver,
+		Directives: generated.DirectiveRoot{
+			IsAuthenticated:  graph.IsAuthenticated,
+			RequiresSudoMode: graph.RequiresSudoMode,
+		},
+	}))
 
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
@@ -42,6 +51,7 @@ func AddGraphQLHandler(r *chi.Mux, cfg *config.Config) {
 		Cache: lru.New[string](100),
 	})
 
+	// Authentication middleware is already applied to all routes in the router
 	r.Handle("/graphql", srv)
 
 	r.Handle("/graphql/playground", playground.Handler("GraphQL Playground", "/graphql"))
@@ -56,19 +66,23 @@ func NewApp() *fx.App {
 		fx.Supply(config),
 		fx.Provide(
 			// router
-			http.NewRouter,
+			serverhttp.NewRouter,
 			// database client
 			db.NewDB,
 			// s3 client
 			s3client.NewS3ClientProvider,
 			// logger
 			logger.New,
+			// GraphQL resolver
+			resolver.NewResolver,
 		),
 		fx.Options(
 			// Account domain repositories
 			account.AccountDomainModule,
 			// Auth domain repositories
 			auth.AuthDomainModule,
+			// HTTP top-level dependencies (JWT auth, middleware)
+			serverhttp.HTTPTopLevelModule,
 		),
 		fx.Invoke(
 			AddGraphQLHandler,
