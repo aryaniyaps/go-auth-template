@@ -17,22 +17,6 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// Import pagination infrastructure
-
-// Error types for auth repository operations
-var (
-	ErrSessionNotFound                 = errors.New("session not found")
-	ErrTokenExpired                    = errors.New("token has expired")
-	ErrInvalidCredentials              = errors.New("invalid credentials")
-	ErrWebAuthnCredentialNotFound      = errors.New("webauthn credential not found")
-	ErrChallengeNotFound               = errors.New("challenge not found")
-	ErrRecoveryCodeInvalid             = errors.New("recovery code invalid")
-	ErrOAuthCredentialAlreadyExists    = errors.New("oauth credential already exists")
-	ErrPasswordResetTokenNotFound      = errors.New("password reset token not found")
-	ErrTwoFactorAuthenticationNotFound = errors.New("two factor authentication challenge not found")
-	ErrTemporaryTwoFactorNotFound      = errors.New("temporary two factor challenge not found")
-)
-
 // Security utility functions for token generation and hashing
 
 // generateSecureToken generates a cryptographically secure random hex token
