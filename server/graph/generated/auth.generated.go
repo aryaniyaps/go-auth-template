@@ -4947,6 +4947,16 @@ func (ec *executionContext) marshalNLogoutPayload2ᚖserverᚋgraphᚋmodelᚐLo
 	return ec._LogoutPayload(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNPasswordResetTokenPayload2serverᚋgraphᚋmodelᚐPasswordResetTokenPayload(ctx context.Context, sel ast.SelectionSet, v model.PasswordResetTokenPayload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._PasswordResetTokenPayload(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNRegisterWithPasskeyPayload2serverᚋgraphᚋmodelᚐRegisterWithPasskeyPayload(ctx context.Context, sel ast.SelectionSet, v model.RegisterWithPasskeyPayload) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -5278,6 +5288,16 @@ func (ec *executionContext) marshalNVerifyGoogleTokenPayload2serverᚋgraphᚋmo
 		return graphql.Null
 	}
 	return ec._VerifyGoogleTokenPayload(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNViewerPayload2serverᚋgraphᚋmodelᚐViewerPayload(ctx context.Context, sel ast.SelectionSet, v model.ViewerPayload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ViewerPayload(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNWebAuthnCredential2ᚖserverᚋgraphᚋmodelᚐWebAuthnCredential(ctx context.Context, sel ast.SelectionSet, v *model.WebAuthnCredential) graphql.Marshaler {

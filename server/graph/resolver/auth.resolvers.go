@@ -170,3 +170,13 @@ func (r *mutationResolver) Generate2faRecoveryCodes(ctx context.Context) (model.
 func (r *mutationResolver) VerifyGoogleToken(ctx context.Context, token string) (model.VerifyGoogleTokenPayload, error) {
 	panic(fmt.Errorf("not implemented: VerifyGoogleToken - verifyGoogleToken"))
 }
+
+// Viewer is the resolver for the viewer field.
+func (r *queryResolver) Viewer(ctx context.Context) (model.ViewerPayload, error) {
+	panic(fmt.Errorf("not implemented: Viewer - viewer"))
+}
+
+// PasswordResetToken is the resolver for the passwordResetToken field.
+func (r *queryResolver) PasswordResetToken(ctx context.Context, resetToken string, email string) (model.PasswordResetTokenPayload, error) {
+	panic(fmt.Errorf("not implemented: PasswordResetToken - passwordResetToken"))
+}

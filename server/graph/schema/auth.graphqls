@@ -1216,3 +1216,26 @@ extend type Mutation {
 		token: String!
 	): VerifyGoogleTokenPayload!
 }
+
+
+extend type Query {
+	"""
+	Get the current user.
+	"""
+	viewer: ViewerPayload!
+
+	"""
+	Get a password reset token.
+	"""
+	passwordResetToken(
+		"""
+		Generated password reset token
+		"""
+		resetToken: String!
+
+		"""
+		The email the password reset token belongs to.
+		"""
+		email: String!
+	): PasswordResetTokenPayload!
+}

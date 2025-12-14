@@ -73,7 +73,12 @@ type CreatePresignedURLPayloadType {
 
 
 type Query {
-  _empty: String
+	node(
+		"""
+		The ID of the object.
+		"""
+		id: ID!
+	): Node
 }
 
 type Mutation {

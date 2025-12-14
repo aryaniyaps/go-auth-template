@@ -266,7 +266,9 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Empty func(childComplexity int) int
+		Node               func(childComplexity int, id string) int
+		PasswordResetToken func(childComplexity int, resetToken string, email string) int
+		Viewer             func(childComplexity int) int
 	}
 
 	RequestEmailVerificationSuccess struct {
@@ -1263,12 +1265,36 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PhoneNumberVerificationTokenCooldownError.RemainingSeconds(childComplexity), true
 
-	case "Query._empty":
-		if e.complexity.Query.Empty == nil {
+	case "Query.node":
+		if e.complexity.Query.Node == nil {
 			break
 		}
 
-		return e.complexity.Query.Empty(childComplexity), true
+		args, err := ec.field_Query_node_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Node(childComplexity, args["id"].(string)), true
+
+	case "Query.passwordResetToken":
+		if e.complexity.Query.PasswordResetToken == nil {
+			break
+		}
+
+		args, err := ec.field_Query_passwordResetToken_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.PasswordResetToken(childComplexity, args["resetToken"].(string), args["email"].(string)), true
+
+	case "Query.viewer":
+		if e.complexity.Query.Viewer == nil {
+			break
+		}
+
+		return e.complexity.Query.Viewer(childComplexity), true
 
 	case "RequestEmailVerificationSuccess.message":
 		if e.complexity.RequestEmailVerificationSuccess.Message == nil {
@@ -3127,7 +3153,29 @@ extend type Mutation {
 		token: String!
 	): VerifyGoogleTokenPayload!
 }
-`, BuiltIn: false},
+
+
+extend type Query {
+	"""
+	Get the current user.
+	"""
+	viewer: ViewerPayload!
+
+	"""
+	Get a password reset token.
+	"""
+	passwordResetToken(
+		"""
+		Generated password reset token
+		"""
+		resetToken: String!
+
+		"""
+		The email the password reset token belongs to.
+		"""
+		email: String!
+	): PasswordResetTokenPayload!
+}`, BuiltIn: false},
 	{Name: "../schema/core.graphqls", Input: `"""
 An object with a Globally Unique ID
 """
@@ -3203,7 +3251,12 @@ type CreatePresignedURLPayloadType {
 
 
 type Query {
-  _empty: String
+	node(
+		"""
+		The ID of the object.
+		"""
+		id: ID!
+	): Node
 }
 
 type Mutation {
