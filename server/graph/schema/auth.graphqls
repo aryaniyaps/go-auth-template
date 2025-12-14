@@ -1,0 +1,396 @@
+
+"""
+The authentication provider.
+"""
+enum AuthProvider {
+	PASSWORD
+	WEBAUTHN_CREDENTIAL
+	OAUTH_GOOGLE
+}
+
+"""
+Used when the authenticator 2FA method is not enabled.
+"""
+type AuthenticatorNotEnabledError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+
+"""
+The create webauthn credential payload.
+"""
+union CreateWebAuthnCredentialPayload = CreateWebAuthnCredentialSuccess | InvalidPasskeyRegistrationCredentialError
+
+"""
+Create webauthn credential success.
+"""
+type CreateWebAuthnCredentialSuccess {
+	"""
+	The created webauthn credential edge.
+	"""
+	webAuthnCredentialEdge: WebAuthnCredentialEdge!
+}
+
+
+
+"""
+The delete other sessions payload.
+"""
+type DeleteOtherSessionsPayload {
+	"""
+	Deleted session IDs.
+	"""
+	deletedSessionIds: [ID!]!
+}
+
+"""
+The delete password payload.
+"""
+union DeletePasswordPayload = Account | InsufficientAuthProvidersError
+
+"""
+The delete session payload.
+"""
+union DeleteSessionPayload = DeleteSessionSuccess | SessionNotFoundError
+
+"""
+Delete session success.
+"""
+type DeleteSessionSuccess {
+	"""
+	The Deleted session edge.
+	"""
+	sessionEdge: SessionEdge!
+}
+
+"""
+The delete webauthn credential payload.
+"""
+union DeleteWebAuthnCredentialPayload = DeleteWebAuthnCredentialSuccess | WebAuthnCredentialNotFoundError | InsufficientAuthProvidersError
+
+"""
+Delete webauthn credential success.
+"""
+type DeleteWebAuthnCredentialSuccess {
+	"""
+	The Deleted webauthn credential edge.
+	"""
+	webAuthnCredentialEdge: WebAuthnCredentialEdge!
+}
+
+
+"""
+The disable account 2FA payload.
+"""
+union DisableAccount2FAWithAuthenticatorPayload = Account | AuthenticatorNotEnabledError
+
+
+"""
+Used when the email address is in use.
+"""
+type EmailInUseError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+"""
+Used when the email verification token cooldown is active.
+"""
+type EmailVerificationTokenCooldownError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+	remainingSeconds: Int!
+}
+
+
+"""
+Enable account 2FA with authenticator success.
+"""
+type EnableAccount2FAWithAuthenticatorSuccess {
+	"""
+	The account with 2FA enabled.
+	"""
+	account: Account!
+
+	"""
+	The recovery codes for the account.
+	"""
+	recoveryCodes: [String!]!
+}
+
+
+"""
+The generate 2FA recovery codes payload.
+"""
+union Generate2FARecoveryCodesPayload = Generate2FARecoveryCodesSuccess | TwoFactorAuthenticationNotEnabledError
+
+"""
+Generate 2FA recovery codes success.
+"""
+type Generate2FARecoveryCodesSuccess {
+	"""
+	The generated 2FA recovery codes.
+	"""
+	recoveryCodes: [String!]!
+}
+
+"""
+The generate authentication options payload.
+"""
+union GenerateAuthenticationOptionsPayload = GenerateAuthenticationOptionsSuccess | InvalidCaptchaTokenError
+
+"""
+Generate authentication options success.
+"""
+type GenerateAuthenticationOptionsSuccess {
+	"""
+	Passkey authentication options.
+	"""
+	authenticationOptions: JSON!
+}
+
+"""
+The generate authenticator 2FA challenge payload.
+"""
+union GenerateAuthenticator2FAChallengePayload = GenerateAuthenticator2FAChallengeSuccess
+
+"""
+Generate account 2FA Challenge success.
+"""
+type GenerateAuthenticator2FAChallengeSuccess {
+	"""
+	The generated 2FA OTP URI.
+	"""
+	otpUri: String!
+
+	"""
+	The generated 2FA secret.
+	"""
+	secret: String!
+}
+
+"""
+The generate passkey creation options payload.
+"""
+union GeneratePasskeyCreationOptionsPayload = GeneratePasskeyCreationOptionsSuccess
+
+"""
+Generate passkey creation options success.
+"""
+type GeneratePasskeyCreationOptionsSuccess {
+	"""
+	Passkey registration options for new passkey creation.
+	"""
+	registrationOptions: JSON!
+}
+
+"""
+The generate passkey registration options payload.
+"""
+union GeneratePasskeyRegistrationOptionsPayload = GeneratePasskeyRegistrationOptionsSuccess | InvalidCaptchaTokenError | EmailInUseError
+
+"""
+Generate passkey registration options success.
+"""
+type GeneratePasskeyRegistrationOptionsSuccess {
+	"""
+	Passkey registration options.
+	"""
+	registrationOptions: JSON!
+}
+
+
+"""
+Used when at least one authentication provider must be enabled.
+"""
+type InsufficientAuthProvidersError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+
+
+"""
+Used when an invalid authentication provider is used.
+"""
+type InvalidAuthenticationProviderError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+
+	"""
+	Available authentication providers for the account.
+	"""
+	availableProviders: [AuthProvider!]!
+}
+
+
+"""
+Used when invalid credentials are provided.
+"""
+type InvalidCredentialsError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+"""
+Used when an invalid email address is provided.
+"""
+type InvalidEmailError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+"""
+Used when an invalid email verification token is provided.
+"""
+type InvalidEmailVerificationTokenError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+
+
+"""
+Used when an invalid passkey authentication credential is provided.
+"""
+type InvalidPasskeyAuthenticationCredentialError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+"""
+Used when an invalid passkey registration credential is provided.
+"""
+type InvalidPasskeyRegistrationCredentialError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+"""
+Used when an invalid password reset token is provided.
+"""
+type InvalidPasswordResetTokenError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+
+
+"""
+The login with passkey payload.
+"""
+union LoginWithPasskeyPayload =
+	| Account
+	| InvalidPasskeyAuthenticationCredentialError
+	| InvalidCaptchaTokenError
+	| WebAuthnChallengeNotFoundError
+
+"""
+The login with password payload.
+"""
+union LoginWithPasswordPayload =
+	| Account
+	| InvalidCredentialsError
+	| InvalidCaptchaTokenError
+	| InvalidAuthenticationProviderError
+	| TwoFactorAuthenticationRequiredError
+
+"""
+The logout payload.
+"""
+type LogoutPayload {
+	"""
+	Human readable success message.
+	"""
+	message: String!
+}
+
+
+"""
+Used when the password is not strong enough.
+"""
+type PasswordNotStrongError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+"""
+A password reset token.
+"""
+type PasswordResetToken implements Node {
+	"""
+	The Globally Unique ID of this object
+	"""
+	id: ID!
+
+	"""
+	Email address of the password reset token's account.
+	"""
+	email: String!
+
+	"""
+	Available 2FA providers for the password reset token's account.
+	"""
+	authProviders: [AuthProvider!]!
+
+	"""
+	Available 2FA providers for the password reset token's account.
+	"""
+	twoFactorProviders: [TwoFactorProvider!]!
+
+	"""
+	Whether the password reset token needs 2FA to be used.
+	"""
+	needs2fa: Boolean!
+}
+
+"""
+Used when the password reset token cooldown is active.
+"""
+type PasswordResetTokenCooldownError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+	remainingSeconds: Int!
+}
+
+"""
+Used when the password reset token is not found.
+"""
+type PasswordResetTokenNotFoundError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+"""
+The password reset token payload.
+"""
+union PasswordResetTokenPayload = PasswordResetToken | PasswordResetTokenNotFoundError

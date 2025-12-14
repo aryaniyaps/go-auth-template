@@ -1,0 +1,169 @@
+"""
+An account.
+"""
+type Account implements Node {
+	"""
+	The Globally Unique ID of this object
+	"""
+	id: ID!
+
+	"""
+	The full name of the account.
+	"""
+	fullName: String!
+
+	"""
+	The email of the account.
+	"""
+	email: String!
+
+	"""
+	The avatar URL of the account.
+	"""
+	avatarUrl: String!
+
+	"""
+	The phone number of the account.
+	"""
+	phoneNumber: String
+
+	"""
+	When the account was last updated.
+	"""
+	updatedAt: DateTime
+
+	"""
+	The authentication providers supported by the account.
+	"""
+	authProviders: [AuthProvider!]!
+
+	"""
+	Available 2FA providers for the account.
+	"""
+	twoFactorProviders: [TwoFactorProvider!]!
+
+	"""
+	Whether the account has 2FA enabled.
+	"""
+	has2faEnabled: Boolean!
+
+	"""
+	The terms and policy of the account.
+	"""
+	termsAndPolicy: TermsAndPolicy!
+
+	"""
+	The analytics preference of the account.
+	"""
+	analyticsPreference: AnalyticsPreference!
+
+	"""
+	When the user's sudo mode grant expires at.
+	"""
+	sudoModeExpiresAt: DateTime
+
+	"""
+	The session for the current user.
+	"""
+	currentSession: Session!
+
+	"""
+	The sessions for the account.
+	"""
+	sessions(
+		"""
+		Returns items before the given cursor.
+		"""
+		before: ID = null
+
+		"""
+		Returns items after the given cursor.
+		"""
+		after: ID = null
+
+		"""
+		How many items to return after the cursor?
+		"""
+		first: Int = null
+
+		"""
+		How many items to return before the cursor?
+		"""
+		last: Int = null
+	): SessionConnection!
+
+	"""
+	The webauthn credentials for the account.
+	"""
+	webAuthnCredentials(
+		"""
+		Returns items before the given cursor.
+		"""
+		before: ID = null
+
+		"""
+		Returns items after the given cursor.
+		"""
+		after: ID = null
+
+		"""
+		How many items to return after the cursor?
+		"""
+		first: Int = null
+
+		"""
+		How many items to return before the cursor?
+		"""
+		last: Int = null
+	): WebAuthnCredentialConnection!
+}
+
+
+
+type InvalidPhoneNumberError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+type InvalidPhoneNumberVerificationTokenError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+
+type PhoneNumberAlreadyExistsError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+type PhoneNumberDoesNotExistError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+type PhoneNumberMissingError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+
+"""
+Used when the phone number verification token cooldown is active.
+"""
+type PhoneNumberVerificationTokenCooldownError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+	remainingSeconds: Int!
+}

@@ -1,0 +1,81 @@
+"""
+An object with a Globally Unique ID
+"""
+interface Node {
+	"""
+	The Globally Unique ID of this object
+	"""
+	id: ID!
+}
+
+
+"""
+Human readable error.
+"""
+interface Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+"""
+Used when an invalid captcha token is provided.
+"""
+type InvalidCaptchaTokenError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+type NotAuthenticatedError implements Error {
+	"""
+	Human readable error message.
+	"""
+	message: String!
+}
+
+"""
+Information to aid in pagination.
+"""
+type PageInfo {
+	"""
+	When paginating forwards, are there more items?
+	"""
+	hasNextPage: Boolean!
+
+	"""
+	When paginating backwards, are there more items?
+	"""
+	hasPreviousPage: Boolean!
+
+	"""
+	When paginating backwards, the cursor to continue.
+	"""
+	startCursor: String
+
+	"""
+	When paginating forwards, the cursor to continue.
+	"""
+	endCursor: String
+}
+
+"""
+The payload for creating a presigned URL.
+"""
+type CreatePresignedURLPayloadType {
+	"""
+	The presigned URL.
+	"""
+	presignedUrl: String!
+}
+
+
+type Query {
+  _empty: String
+}
+
+type Mutation {
+  _empty: String
+}
