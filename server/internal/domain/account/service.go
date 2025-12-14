@@ -1,45 +1,37 @@
 package account
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"net/http"
-	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
+	"server/internal/infrastructure/s3client"
+
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/ttacon/libphonenumber"
 	"go.uber.org/zap"
 )
 
 const (
-	MaxAvatarFileSize   = 5 << 20 // 5MB
-	AllowedAvatarTypes  = "image/jpeg,image/png,image/gif,image/webp"
-	AvatarBucketName    = "account-avatars"
-	AvatarURLExpiry     = 24 * time.Hour
-	SMSTokenLength      = 6
-	SMSTokenExpiry      = 15 * time.Minute
-)
-
-var (
-	phoneNumberRegex = regexp.MustCompile(`^\+\d{10,15}$`)
+	MaxAvatarFileSize  = 5 << 20 // 5MB
+	AllowedAvatarTypes = "image/jpeg,image/png,image/gif,image/webp"
+	AvatarBucketName   = "account-avatars"
+	AvatarURLExpiry    = 24 * time.Hour
+	SMSTokenLength     = 6
+	SMSTokenExpiry     = 15 * time.Minute
 )
 
 // AccountService provides business logic for account operations
 type AccountService struct {
-	accountRepo              AccountRepo
-	phoneTokenRepo           PhoneNumberVerificationTokenRepo
-	emailTokenRepo           EmailVerificationTokenRepo
-	messageSender            MessageSender
-	s3Client                 *s3.Client
-	logger                   *zap.Logger
+	accountRepo    AccountRepo
+	phoneTokenRepo PhoneNumberVerificationTokenRepo
+	emailTokenRepo EmailVerificationTokenRepo
+	messageSender  MessageSender
+	s3Client       *s3.Client
+	logger         *zap.Logger
 }
 
 // NewAccountService creates a new AccountService instance
@@ -61,26 +53,6 @@ func NewAccountService(
 	}
 }
 
-// NewS3Client creates a new S3 client with default configuration
-func NewS3Client(ctx context.Context, region string) (*s3.Client, error) {
-	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(region))
-	if err != nil {
-		return nil, fmt.Errorf("failed to load AWS config: %w", err)
-	}
-	return s3.NewFromConfig(cfg), nil
-}
-
-// NewS3ClientFromEnv creates an S3 client using environment variables
-func NewS3ClientFromEnv(ctx context.Context) (*s3.Client, error) {
-	region := "us-east-1" // Default region
-	if envRegion := ctx.Value("aws_region"); envRegion != nil {
-		if r, ok := envRegion.(string); ok {
-			region = r
-		}
-	}
-	return NewS3Client(ctx, region)
-}
-
 // GetAccountByPhoneNumber retrieves an account by phone number
 //
 // This method validates the phone number format using international phone number standards
@@ -95,12 +67,13 @@ func NewS3ClientFromEnv(ctx context.Context) (*s3.Client, error) {
 //   - error: ErrAccountNotFound if no account exists, or other errors for validation/database issues
 //
 // Example:
-//   account, err := service.GetAccountByPhoneNumber(ctx, "+1234567890")
-//   if err != nil {
-//       log.Printf("Failed to get account: %v", err)
-//       return
-//   }
-//   fmt.Printf("Found account: %s\n", account.FullName)
+//
+//	account, err := service.GetAccountByPhoneNumber(ctx, "+1234567890")
+//	if err != nil {
+//	    log.Printf("Failed to get account: %v", err)
+//	    return
+//	}
+//	fmt.Printf("Found account: %s\n", account.FullName)
 func (s *AccountService) GetAccountByPhoneNumber(ctx context.Context, phoneNumber string) (*Account, error) {
 	if err := s.validatePhoneNumber(phoneNumber); err != nil {
 		return nil, err
@@ -133,12 +106,13 @@ func (s *AccountService) GetAccountByPhoneNumber(ctx context.Context, phoneNumbe
 //   - error: Error if account not found, validation fails, or database update fails
 //
 // Example:
-//   account, err := service.UpdateAccountFullName(ctx, accountID, "John Doe")
-//   if err != nil {
-//       log.Printf("Failed to update full name: %v", err)
-//       return
-//   }
-//   fmt.Printf("Updated account: %s\n", account.FullName)
+//
+//	account, err := service.UpdateAccountFullName(ctx, accountID, "John Doe")
+//	if err != nil {
+//	    log.Printf("Failed to update full name: %v", err)
+//	    return
+//	}
+//	fmt.Printf("Updated account: %s\n", account.FullName)
 func (s *AccountService) UpdateAccountFullName(ctx context.Context, accountID int64, fullName string) (*Account, error) {
 	fullName = strings.TrimSpace(fullName)
 	if fullName == "" {
@@ -150,7 +124,7 @@ func (s *AccountService) UpdateAccountFullName(ctx context.Context, accountID in
 		return nil, fmt.Errorf("failed to get account: %w", err)
 	}
 
-	updatedAccount, err := s.accountRepo.Update(ctx, account, &fullName, nil, nil, nil, nil, nil)
+	updatedAccount, err := s.accountRepo.Update(ctx, account, &fullName, nil, nil, nil, nil)
 	if err != nil {
 		s.logger.Error("Failed to update account full name", zap.Error(err))
 		return nil, fmt.Errorf("failed to update account: %w", err)
@@ -174,12 +148,13 @@ func (s *AccountService) UpdateAccountFullName(ctx context.Context, accountID in
 //   - error: Error if account not found, phone validation fails, or database update fails
 //
 // Example:
-//   account, err := service.UpdateAccountPhoneNumber(ctx, accountID, "+1234567890")
-//   if err != nil {
-//       log.Printf("Failed to update phone number: %v", err)
-//       return
-//   }
-//   fmt.Printf("Updated phone number: %s\n", account.PhoneNumber)
+//
+//	account, err := service.UpdateAccountPhoneNumber(ctx, accountID, "+1234567890")
+//	if err != nil {
+//	    log.Printf("Failed to update phone number: %v", err)
+//	    return
+//	}
+//	fmt.Printf("Updated phone number: %s\n", account.PhoneNumber)
 func (s *AccountService) UpdateAccountPhoneNumber(ctx context.Context, accountID int64, phoneNumber string) (*Account, error) {
 	if err := s.validatePhoneNumber(phoneNumber); err != nil {
 		return nil, err
@@ -190,7 +165,7 @@ func (s *AccountService) UpdateAccountPhoneNumber(ctx context.Context, accountID
 		return nil, fmt.Errorf("failed to get account: %w", err)
 	}
 
-	updatedAccount, err := s.accountRepo.Update(ctx, account, nil, nil, &phoneNumber, nil, nil, nil)
+	updatedAccount, err := s.accountRepo.Update(ctx, account, nil, nil, &phoneNumber, nil, nil)
 	if err != nil {
 		s.logger.Error("Failed to update account phone number", zap.Error(err))
 		return nil, fmt.Errorf("failed to update account: %w", err)
@@ -215,12 +190,13 @@ func (s *AccountService) UpdateAccountPhoneNumber(ctx context.Context, accountID
 //   - error: Error if account not found, validation fails, or database update fails
 //
 // Example:
-//   account, err := service.UpdateAccountTermsAndPolicy(ctx, accountID, "2.1.0")
-//   if err != nil {
-//       log.Printf("Failed to update terms: %v", err)
-//       return
-//   }
-//   fmt.Printf("Accepted terms version: %s\n", account.TermsAndPolicy.Version)
+//
+//	account, err := service.UpdateAccountTermsAndPolicy(ctx, accountID, "2.1.0")
+//	if err != nil {
+//	    log.Printf("Failed to update terms: %v", err)
+//	    return
+//	}
+//	fmt.Printf("Accepted terms version: %s\n", account.TermsAndPolicy.Version)
 func (s *AccountService) UpdateAccountTermsAndPolicy(ctx context.Context, accountID int64, version string) (*Account, error) {
 	version = strings.TrimSpace(version)
 	if version == "" {
@@ -238,7 +214,7 @@ func (s *AccountService) UpdateAccountTermsAndPolicy(ctx context.Context, accoun
 		UpdatedAt: time.Now(),
 	}
 
-	updatedAccount, err := s.accountRepo.Update(ctx, account, nil, nil, nil, termsAndPolicy, nil, nil)
+	updatedAccount, err := s.accountRepo.Update(ctx, account, nil, nil, nil, termsAndPolicy, nil)
 	if err != nil {
 		s.logger.Error("Failed to update account terms and policy", zap.Error(err))
 		return nil, fmt.Errorf("failed to update account terms and policy: %w", err)
@@ -263,12 +239,13 @@ func (s *AccountService) UpdateAccountTermsAndPolicy(ctx context.Context, accoun
 //   - error: Error if account not found, validation fails, or database update fails
 //
 // Example:
-//   account, err := service.UpdateAccountAnalyticsPreference(ctx, accountID, "enabled")
-//   if err != nil {
-//       log.Printf("Failed to update analytics preference: %v", err)
-//       return
-//   }
-//   fmt.Printf("Analytics preference: %s\n", account.AnalyticsPreference.Type)
+//
+//	account, err := service.UpdateAccountAnalyticsPreference(ctx, accountID, "enabled")
+//	if err != nil {
+//	    log.Printf("Failed to update analytics preference: %v", err)
+//	    return
+//	}
+//	fmt.Printf("Analytics preference: %s\n", account.AnalyticsPreference.Type)
 func (s *AccountService) UpdateAccountAnalyticsPreference(ctx context.Context, accountID int64, preference string) (*Account, error) {
 	preference = strings.TrimSpace(preference)
 	validPreferences := []string{"enabled", "disabled", "undecided"}
@@ -295,7 +272,7 @@ func (s *AccountService) UpdateAccountAnalyticsPreference(ctx context.Context, a
 		UpdatedAt: time.Now(),
 	}
 
-	updatedAccount, err := s.accountRepo.Update(ctx, account, nil, nil, nil, nil, analyticsPref, nil)
+	updatedAccount, err := s.accountRepo.Update(ctx, account, nil, nil, nil, nil, analyticsPref)
 	if err != nil {
 		s.logger.Error("Failed to update account analytics preference", zap.Error(err))
 		return nil, fmt.Errorf("failed to update account analytics preference: %w", err)
@@ -319,19 +296,20 @@ func (s *AccountService) UpdateAccountAnalyticsPreference(ctx context.Context, a
 //   - error: Error if account not found or database update fails
 //
 // Example:
-//   account, err := service.UpdateAccountWhatsappJobAlerts(ctx, accountID, true)
-//   if err != nil {
-//       log.Printf("Failed to update WhatsApp alerts: %v", err)
-//       return
-//   }
-//   fmt.Printf("WhatsApp alerts enabled: %t\n", account.WhatsappJobAlerts)
+//
+//	account, err := service.UpdateAccountWhatsappJobAlerts(ctx, accountID, true)
+//	if err != nil {
+//	    log.Printf("Failed to update WhatsApp alerts: %v", err)
+//	    return
+//	}
+//	fmt.Printf("WhatsApp alerts enabled: %t\n", account.WhatsappJobAlerts)
 func (s *AccountService) UpdateAccountWhatsappJobAlerts(ctx context.Context, accountID int64, enabled bool) (*Account, error) {
 	account, err := s.accountRepo.Get(ctx, accountID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get account: %w", err)
 	}
 
-	updatedAccount, err := s.accountRepo.Update(ctx, account, nil, nil, nil, nil, nil, &enabled)
+	updatedAccount, err := s.accountRepo.Update(ctx, account, nil, nil, nil, nil, nil)
 	if err != nil {
 		s.logger.Error("Failed to update account WhatsApp job alerts", zap.Error(err))
 		return nil, fmt.Errorf("failed to update account WhatsApp job alerts: %w", err)
@@ -357,19 +335,20 @@ func (s *AccountService) UpdateAccountWhatsappJobAlerts(ctx context.Context, acc
 //   - error: Error if validation fails, S3 upload fails, or database update fails
 //
 // Example:
-//   file, header, err := r.FormFile("avatar")
-//   if err != nil {
-//       log.Printf("Failed to get file: %v", err)
-//       return
-//   }
-//   defer file.Close()
 //
-//   account, err := service.UpdateAccountAvatarURL(ctx, accountID, file, header.Filename)
-//   if err != nil {
-//       log.Printf("Failed to upload avatar: %v", err)
-//       return
-//   }
-//   fmt.Printf("Avatar uploaded: %s\n", account.InternalAvatarURL)
+//	file, header, err := r.FormFile("avatar")
+//	if err != nil {
+//	    log.Printf("Failed to get file: %v", err)
+//	    return
+//	}
+//	defer file.Close()
+//
+//	account, err := service.UpdateAccountAvatarURL(ctx, accountID, file, header.Filename)
+//	if err != nil {
+//	    log.Printf("Failed to upload avatar: %v", err)
+//	    return
+//	}
+//	fmt.Printf("Avatar uploaded: %s\n", account.InternalAvatarURL)
 func (s *AccountService) UpdateAccountAvatarURL(ctx context.Context, accountID int64, file io.Reader, filename string) (*Account, error) {
 	// Validate inputs first
 	if file == nil {
@@ -399,16 +378,16 @@ func (s *AccountService) UpdateAccountAvatarURL(ctx context.Context, accountID i
 	}
 
 	// Generate unique filename
-	uniqueFilename := s.generateUniqueFilename(filename)
+	uniqueFilename := s3client.GenerateUniqueFilename(filename)
 
 	// Upload to S3
-	avatarURL, err := s.uploadToS3(ctx, uniqueFilename, fileBytes, contentType)
+	avatarURL, err := s3client.UploadToS3(ctx, s.s3Client, AvatarBucketName, uniqueFilename, fileBytes, contentType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to upload avatar: %w", err)
 	}
 
 	// Update account with new avatar URL
-	updatedAccount, err := s.accountRepo.Update(ctx, account, nil, &avatarURL, nil, nil, nil, nil)
+	updatedAccount, err := s.accountRepo.Update(ctx, account, nil, &avatarURL, nil, nil, nil)
 	if err != nil {
 		s.logger.Error("Failed to update account avatar URL", zap.Error(err))
 		return nil, fmt.Errorf("failed to update account: %w", err)
@@ -453,42 +432,6 @@ func (s *AccountService) validateAvatarFile(file io.Reader, filename string) ([]
 	return fileBytes, contentType, nil
 }
 
-// generateUniqueFilename generates a unique filename for S3 upload
-func (s *AccountService) generateUniqueFilename(originalFilename string) string {
-	ext := filepath.Ext(originalFilename)
-	timestamp := time.Now().Unix()
-	uniqueFilename := fmt.Sprintf("%d%s", timestamp, ext)
-	return uniqueFilename
-}
-
-// uploadToS3 uploads file content to S3 and returns the URL
-func (s *AccountService) uploadToS3(ctx context.Context, filename string, fileBytes []byte, contentType string) (string, error) {
-	// Create PutObject input
-	input := &s3.PutObjectInput{
-		Bucket:      aws.String(AvatarBucketName),
-		Key:         aws.String(filename),
-		Body:        bytes.NewReader(fileBytes),
-		ContentType: aws.String(contentType),
-		ACL:         types.ObjectCannedACLPublicRead, // Make the file publicly accessible
-	}
-
-	// Upload file
-	_, err := s.s3Client.PutObject(ctx, input)
-	if err != nil {
-		return "", fmt.Errorf("failed to upload file to S3: %w", err)
-	}
-
-	// Construct URL
-	avatarURL := fmt.Sprintf("https://%s.s3.amazonaws.com/%s", AvatarBucketName, filename)
-
-	s.logger.Info("Successfully uploaded avatar to S3",
-		zap.String("bucket", AvatarBucketName),
-		zap.String("filename", filename),
-		zap.String("url", avatarURL))
-
-	return avatarURL, nil
-}
-
 // CreatePhoneVerificationToken creates and sends a phone verification token
 //
 // This method generates a 6-digit verification token, stores it in the database,
@@ -502,12 +445,13 @@ func (s *AccountService) uploadToS3(ctx context.Context, filename string, fileBy
 //   - error: Error if phone validation fails, token creation fails, or SMS sending fails
 //
 // Example:
-//   err := service.CreatePhoneVerificationToken(ctx, "+1234567890")
-//   if err != nil {
-//       log.Printf("Failed to create verification token: %v", err)
-//       return
-//   }
-//   fmt.Println("Verification token sent successfully")
+//
+//	err := service.CreatePhoneVerificationToken(ctx, "+1234567890")
+//	if err != nil {
+//	    log.Printf("Failed to create verification token: %v", err)
+//	    return
+//	}
+//	fmt.Println("Verification token sent successfully")
 func (s *AccountService) CreatePhoneVerificationToken(ctx context.Context, phoneNumber string) error {
 	if err := s.validatePhoneNumber(phoneNumber); err != nil {
 		return fmt.Errorf("invalid phone number format: %w", err)
@@ -551,12 +495,13 @@ func (s *AccountService) CreatePhoneVerificationToken(ctx context.Context, phone
 //   - error: Error if validation fails, token is invalid/expired, or database operations fail
 //
 // Example:
-//   err := service.VerifyPhoneNumber(ctx, "+1234567890", "123456")
-//   if err != nil {
-//       log.Printf("Failed to verify phone number: %v", err)
-//       return
-//   }
-//   fmt.Println("Phone number verified successfully")
+//
+//	err := service.VerifyPhoneNumber(ctx, "+1234567890", "123456")
+//	if err != nil {
+//	    log.Printf("Failed to verify phone number: %v", err)
+//	    return
+//	}
+//	fmt.Println("Phone number verified successfully")
 func (s *AccountService) VerifyPhoneNumber(ctx context.Context, phoneNumber, token string) error {
 	phoneNumber = strings.TrimSpace(phoneNumber)
 	token = strings.TrimSpace(token)
@@ -608,7 +553,7 @@ func (s *AccountService) VerifyPhoneNumber(ctx context.Context, phoneNumber, tok
 
 	// If account exists, update it with verified phone number
 	if account != nil {
-		_, err = s.accountRepo.Update(ctx, account, nil, nil, &phoneNumber, nil, nil, nil)
+		_, err = s.accountRepo.Update(ctx, account, nil, nil, &phoneNumber, nil, nil)
 		if err != nil {
 			s.logger.Error("Failed to update account with verified phone number", zap.Error(err))
 			return fmt.Errorf("failed to update account: %w", err)

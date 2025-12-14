@@ -90,11 +90,11 @@ func TestVerifyPassword(t *testing.T) {
 	require.NotEmpty(t, hash)
 
 	tests := []struct {
-		name         string
-		password     string
-		hash         string
-		wantValid    bool
-		wantErr      bool
+		name      string
+		password  string
+		hash      string
+		wantValid bool
+		wantErr   bool
 	}{
 		{
 			name:      "correct password",
@@ -251,15 +251,15 @@ func TestAccountRepo_Create(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
-		name                 string
-		email                string
-		fullName             string
-		authProviders        []string
-		password             *string
-		analyticsPreference  string
-		phoneNumber          *string
-		wantErr              bool
-		expectedErrContains  string
+		name                string
+		email               string
+		fullName            string
+		authProviders       []string
+		password            *string
+		analyticsPreference string
+		phoneNumber         *string
+		wantErr             bool
+		expectedErrContains string
 	}{
 		{
 			name:                "create account with password",
@@ -398,11 +398,11 @@ func TestAccountRepo_GetByEmail(t *testing.T) {
 	require.NotNil(t, account)
 
 	tests := []struct {
-		name        string
-		email       string
-		wantErr     bool
-		wantResult  bool
-		expectedID  int64
+		name       string
+		email      string
+		wantErr    bool
+		wantResult bool
+		expectedID int64
 	}{
 		{
 			name:       "get existing account by email",
@@ -465,37 +465,36 @@ func TestAccountRepo_Update(t *testing.T) {
 		phoneNumber           *string
 		termsAndPolicy        *TermsAndPolicy
 		analyticsPreference   *AnalyticsPreference
-		whatsappJobAlerts     *bool
 		expectNameChange      bool
 		expectAvatarChange    bool
 		expectPolicyChange    bool
 		expectAnalyticsChange bool
 	}{
 		{
-			name:                "update full name only",
-			fullName:            stringPtr("Updated Name"),
-			expectNameChange:    true,
-			expectAvatarChange:  false,
+			name:               "update full name only",
+			fullName:           stringPtr("Updated Name"),
+			expectNameChange:   true,
+			expectAvatarChange: false,
 		},
 		{
-			name:                "update avatar URL only",
-			avatarURL:           stringPtr("https://example.com/avatar.jpg"),
-			expectNameChange:    false,
-			expectAvatarChange:  true,
+			name:               "update avatar URL only",
+			avatarURL:          stringPtr("https://example.com/avatar.jpg"),
+			expectNameChange:   false,
+			expectAvatarChange: true,
 		},
 		{
-			name:               "update terms and policy only",
+			name: "update terms and policy only",
 			termsAndPolicy: &TermsAndPolicy{
 				Type:      "updated",
 				UpdatedAt: time.Now(),
 				Version:   "2.0",
 			},
-			expectNameChange:     false,
-			expectAvatarChange:   false,
-			expectPolicyChange:   true,
+			expectNameChange:   false,
+			expectAvatarChange: false,
+			expectPolicyChange: true,
 		},
 		{
-			name:                "update analytics preference only",
+			name: "update analytics preference only",
 			analyticsPreference: &AnalyticsPreference{
 				Type:      "enabled",
 				UpdatedAt: time.Now(),
@@ -505,10 +504,10 @@ func TestAccountRepo_Update(t *testing.T) {
 			expectAnalyticsChange: true,
 		},
 		{
-			name:                "no updates",
-			expectNameChange:    false,
-			expectAvatarChange:  false,
-			expectPolicyChange:  false,
+			name:                  "no updates",
+			expectNameChange:      false,
+			expectAvatarChange:    false,
+			expectPolicyChange:    false,
 			expectAnalyticsChange: false,
 		},
 	}
@@ -523,7 +522,7 @@ func TestAccountRepo_Update(t *testing.T) {
 			originalTerms := freshAccount.TermsAndPolicy
 			originalAnalytics := freshAccount.AnalyticsPref
 
-			updatedAccount, err := repo.Update(ctx, freshAccount, tt.fullName, tt.avatarURL, tt.phoneNumber, tt.termsAndPolicy, tt.analyticsPreference, tt.whatsappJobAlerts)
+			updatedAccount, err := repo.Update(ctx, freshAccount, tt.fullName, tt.avatarURL, tt.phoneNumber, tt.termsAndPolicy, tt.analyticsPreference)
 
 			assert.NoError(t, err)
 			assert.NotNil(t, updatedAccount)

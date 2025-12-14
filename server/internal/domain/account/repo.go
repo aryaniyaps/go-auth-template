@@ -126,8 +126,7 @@ type AccountRepo interface {
 	Get(ctx context.Context, accountID int64) (*Account, error)
 	GetByEmail(ctx context.Context, email string) (*Account, error)
 	GetByPhoneNumber(ctx context.Context, phoneNumber string) (*Account, error)
-	Update(ctx context.Context, account *Account, fullName *string, avatarURL *string, phoneNumber *string, termsAndPolicy *TermsAndPolicy, analyticsPreference *AnalyticsPreference, whatsappJobAlerts *bool) (*Account, error)
-	UpdateProfile(ctx context.Context, account *Account, profile any) (*Account, error)
+	Update(ctx context.Context, account *Account, fullName *string, avatarURL *string, phoneNumber *string, termsAndPolicy *TermsAndPolicy, analyticsPreference *AnalyticsPreference) (*Account, error)
 	UpdateAuthProviders(ctx context.Context, account *Account, authProviders []string) (*Account, error)
 	DeleteAvatar(ctx context.Context, account *Account) (*Account, error)
 	SetTwoFactorSecret(ctx context.Context, account *Account, totpSecret string) (*Account, error)
@@ -265,7 +264,7 @@ func (r *accountRepo) GetByPhoneNumber(ctx context.Context, phoneNumber string) 
 }
 
 // Update updates an account with optional fields
-func (r *accountRepo) Update(ctx context.Context, account *Account, fullName *string, avatarURL *string, phoneNumber *string, termsAndPolicy *TermsAndPolicy, analyticsPreference *AnalyticsPreference, whatsappJobAlerts *bool) (*Account, error) {
+func (r *accountRepo) Update(ctx context.Context, account *Account, fullName *string, avatarURL *string, phoneNumber *string, termsAndPolicy *TermsAndPolicy, analyticsPreference *AnalyticsPreference) (*Account, error) {
 	// Update the account struct fields if provided
 	if fullName != nil {
 		account.FullName = *fullName
@@ -287,10 +286,6 @@ func (r *accountRepo) Update(ctx context.Context, account *Account, fullName *st
 		account.AnalyticsPref = *analyticsPreference
 	}
 
-	if whatsappJobAlerts != nil {
-		account.WhatsAppJobAlerts = whatsappJobAlerts
-	}
-
 	// Use Bun's update functionality to save the changes
 	_, err := r.db.NewUpdate().
 		Model(account).
@@ -306,13 +301,6 @@ func (r *accountRepo) Update(ctx context.Context, account *Account, fullName *st
 		return nil, fmt.Errorf("failed to update account: %w", err)
 	}
 
-	return account, nil
-}
-
-// UpdateProfile updates the account's profile
-func (r *accountRepo) UpdateProfile(ctx context.Context, account *Account, profile any) (*Account, error) {
-	// Note: This would need Profile field added to Account model
-	// For now, just return the account unchanged
 	return account, nil
 }
 

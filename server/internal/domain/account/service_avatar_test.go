@@ -3,6 +3,7 @@ package account
 import (
 	"bytes"
 	"context"
+	"server/internal/infrastructure/s3client"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -86,18 +87,18 @@ func TestAccountService_ValidateAvatarFile(t *testing.T) {
 		expectedType  string
 	}{
 		{
-			name:          "valid JPEG file should pass",
-			fileContent:   []byte("\xFF\xD8\xFF\xE0\x00\x10JFIF"), // JPEG header
-			filename:      "avatar.jpg",
-			expectError:   false,
-			expectedType:  "image/jpeg",
+			name:         "valid JPEG file should pass",
+			fileContent:  []byte("\xFF\xD8\xFF\xE0\x00\x10JFIF"), // JPEG header
+			filename:     "avatar.jpg",
+			expectError:  false,
+			expectedType: "image/jpeg",
 		},
 		{
-			name:          "valid PNG file should pass",
-			fileContent:   []byte("\x89PNG\r\n\x1a\n"), // PNG header
-			filename:      "avatar.png",
-			expectError:   false,
-			expectedType:  "image/png",
+			name:         "valid PNG file should pass",
+			fileContent:  []byte("\x89PNG\r\n\x1a\n"), // PNG header
+			filename:     "avatar.png",
+			expectError:  false,
+			expectedType: "image/png",
 		},
 		{
 			name:          "empty file should return error",
@@ -143,12 +144,6 @@ func TestAccountService_ValidateAvatarFile(t *testing.T) {
 }
 
 func TestAccountService_GenerateUniqueFilename(t *testing.T) {
-	mockRepo := &MockAccountRepo{}
-	mockPhoneTokenRepo := &MockPhoneNumberVerificationTokenRepo{}
-	mockEmailTokenRepo := &MockEmailVerificationTokenRepo{}
-	mockSMS := &MockMessageSender{}
-	logger := zap.NewNop()
-	service := NewAccountService(mockRepo, mockPhoneTokenRepo, mockEmailTokenRepo, mockSMS, nil, logger)
 
 	tests := []struct {
 		name         string
@@ -179,7 +174,7 @@ func TestAccountService_GenerateUniqueFilename(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := service.generateUniqueFilename(tt.filename)
+			result := s3client.GenerateUniqueFilename(tt.filename)
 
 			assert.NotEmpty(t, result)
 			assert.NotEqual(t, tt.filename, result)

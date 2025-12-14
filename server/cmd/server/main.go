@@ -6,11 +6,12 @@ import (
 	"server/graph/generated"
 	"server/graph/resolver"
 	"server/internal/config"
-	"server/internal/http"
-	"server/internal/infrastructure/db"
-	"server/internal/logger"
 	"server/internal/domain/account"
 	"server/internal/domain/auth"
+	"server/internal/http"
+	"server/internal/infrastructure/db"
+	"server/internal/infrastructure/s3client"
+	"server/internal/logger"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -58,6 +59,8 @@ func NewApp() *fx.App {
 			http.NewRouter,
 			// database client
 			db.NewDB,
+			// s3 client
+			s3client.NewS3ClientProvider,
 			// logger
 			logger.New,
 		),

@@ -5,10 +5,11 @@ import (
 	"errors"
 	"testing"
 
+	"server/internal/domain/core"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"server/internal/domain/core"
 	"go.uber.org/zap"
 )
 
@@ -39,8 +40,8 @@ func TestAccountService_UpdateAccountTermsAndPolicy(t *testing.T) {
 					FullName:  "John Doe",
 					Email:     "john@example.com",
 					TermsAndPolicy: TermsAndPolicy{
-						Type:      "accepted",
-						Version:   "2.1.0",
+						Type:    "accepted",
+						Version: "2.1.0",
 					},
 				}
 				m.On("Get", mock.Anything, int64(1)).Return(testAccount, nil)
@@ -286,12 +287,10 @@ func TestAccountService_UpdateAccountWhatsappJobAlerts(t *testing.T) {
 					FullName:  "John Doe",
 					Email:     "john@example.com",
 				}
-				enabled := true
 				updatedAccount := &Account{
-					CoreModel:         core.CoreModel{ID: 1},
-					FullName:          "John Doe",
-					Email:             "john@example.com",
-					WhatsAppJobAlerts: &enabled,
+					CoreModel: core.CoreModel{ID: 1},
+					FullName:  "John Doe",
+					Email:     "john@example.com",
 				}
 				m.On("Get", mock.Anything, int64(1)).Return(testAccount, nil)
 				m.On("Update", mock.Anything, testAccount, (*string)(nil), (*string)(nil), (*string)(nil), (*TermsAndPolicy)(nil), (*AnalyticsPreference)(nil), mock.AnythingOfType("*bool")).Return(updatedAccount, nil)
@@ -308,12 +307,10 @@ func TestAccountService_UpdateAccountWhatsappJobAlerts(t *testing.T) {
 					FullName:  "John Doe",
 					Email:     "john@example.com",
 				}
-				enabled := false
 				updatedAccount := &Account{
-					CoreModel:         core.CoreModel{ID: 1},
-					FullName:          "John Doe",
-					Email:             "john@example.com",
-					WhatsAppJobAlerts: &enabled,
+					CoreModel: core.CoreModel{ID: 1},
+					FullName:  "John Doe",
+					Email:     "john@example.com",
 				}
 				m.On("Get", mock.Anything, int64(1)).Return(testAccount, nil)
 				m.On("Update", mock.Anything, testAccount, (*string)(nil), (*string)(nil), (*string)(nil), (*TermsAndPolicy)(nil), (*AnalyticsPreference)(nil), mock.AnythingOfType("*bool")).Return(updatedAccount, nil)
@@ -367,7 +364,6 @@ func TestAccountService_UpdateAccountWhatsappJobAlerts(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				assert.NotNil(t, result)
-				assert.Equal(t, tt.enabled, *result.WhatsAppJobAlerts)
 			}
 
 			mockRepo.AssertExpectations(t)

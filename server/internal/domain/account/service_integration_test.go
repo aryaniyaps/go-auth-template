@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"server/internal/config"
+	"server/internal/infrastructure/s3client"
 )
 
 func TestAccountServiceDependencyInjection(t *testing.T) {
@@ -82,9 +83,9 @@ func TestAccountServiceDependencyInjection(t *testing.T) {
 
 func TestS3ClientProvider(t *testing.T) {
 	tests := []struct {
-		name        string
-		s3Bucket    string
-		expectNil   bool
+		name      string
+		s3Bucket  string
+		expectNil bool
 	}{
 		{
 			name:      "nil S3 client when bucket not configured",
@@ -105,7 +106,7 @@ func TestS3ClientProvider(t *testing.T) {
 				S3Region: "us-east-1",
 			}
 
-			client, err := NewS3ClientProvider(cfg)
+			client, err := s3client.NewS3ClientProvider(cfg)
 
 			// Should not error even if S3 is not configured
 			assert.NoError(t, err)

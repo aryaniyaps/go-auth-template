@@ -33,7 +33,7 @@ func TestAccountService_EndToEndWorkflows(t *testing.T) {
 
 		// Mock successful token creation
 		mockPhoneTokenRepo.On("Create", mock.Anything, phoneNumber).Return("123456", &PhoneNumberVerificationToken{
-			CoreModel: core.CoreModel{ID: 1},
+			CoreModel:   core.CoreModel{ID: 1},
 			PhoneNumber: phoneNumber,
 			TokenHash:   "hashed_token",
 			ExpiresAt:   time.Now().Add(15 * time.Minute),
@@ -48,7 +48,7 @@ func TestAccountService_EndToEndWorkflows(t *testing.T) {
 
 		// Step 2: Mock token verification
 		mockPhoneTokenRepo.On("GetByPhoneNumber", mock.Anything, phoneNumber).Return(&PhoneNumberVerificationToken{
-			CoreModel: core.CoreModel{ID: 1},
+			CoreModel:   core.CoreModel{ID: 1},
 			PhoneNumber: phoneNumber,
 			TokenHash:   "hashed_token",
 			ExpiresAt:   time.Now().Add(15 * time.Minute),
@@ -119,7 +119,6 @@ func TestAccountService_EndToEndWorkflows(t *testing.T) {
 				Type:      "enabled",
 				UpdatedAt: time.Now(),
 			},
-			WhatsAppJobAlerts: &[]bool{true}[0],
 		}, nil)
 
 		updatedAccount, err = service.UpdateAccountAnalyticsPreference(context.Background(), 1, "enabled")
@@ -167,9 +166,9 @@ func TestAccountService_EndToEndWorkflows(t *testing.T) {
 		updatedAccount.FullName = "Jane Doe"
 
 		mockRepo.On("Update", ctx, updatedAccount, (*string)(nil), (*string)(nil), mock.AnythingOfType("*string"), (*TermsAndPolicy)(nil), (*AnalyticsPreference)(nil), (*bool)(nil)).Return(&Account{
-			CoreModel: core.CoreModel{ID: 2},
-			FullName:  "Jane Doe",
-			Email:     "jane@example.com",
+			CoreModel:   core.CoreModel{ID: 2},
+			FullName:    "Jane Doe",
+			Email:       "jane@example.com",
 			PhoneNumber: &newPhoneNumber,
 		}, nil)
 
@@ -180,16 +179,14 @@ func TestAccountService_EndToEndWorkflows(t *testing.T) {
 		// Step 3: Update WhatsApp preferences
 		updatedAccount.PhoneNumber = &newPhoneNumber
 		mockRepo.On("Update", ctx, updatedAccount, (*string)(nil), (*string)(nil), (*string)(nil), (*TermsAndPolicy)(nil), (*AnalyticsPreference)(nil), mock.AnythingOfType("*bool")).Return(&Account{
-			CoreModel: core.CoreModel{ID: 2},
-			FullName:  "Jane Doe",
-			Email:     "jane@example.com",
+			CoreModel:   core.CoreModel{ID: 2},
+			FullName:    "Jane Doe",
+			Email:       "jane@example.com",
 			PhoneNumber: &newPhoneNumber,
-			WhatsAppJobAlerts: &[]bool{false}[0],
 		}, nil)
 
 		updatedAccount, err = service.UpdateAccountWhatsappJobAlerts(ctx, 2, false)
 		require.NoError(t, err)
-		assert.False(t, *updatedAccount.WhatsAppJobAlerts)
 
 		// Verify all mock expectations
 		mockRepo.AssertExpectations(t)
@@ -212,7 +209,7 @@ func TestAccountService_EndToEndWorkflows(t *testing.T) {
 
 		// Step 1: Create verification token for new phone number
 		mockPhoneTokenRepo.On("Create", ctx, newPhoneNumber).Return("654321", &PhoneNumberVerificationToken{
-			CoreModel: core.CoreModel{ID: 2},
+			CoreModel:   core.CoreModel{ID: 2},
 			PhoneNumber: newPhoneNumber,
 			TokenHash:   "hashed_new_token",
 			ExpiresAt:   time.Now().Add(15 * time.Minute),
@@ -225,7 +222,7 @@ func TestAccountService_EndToEndWorkflows(t *testing.T) {
 
 		// Step 2: Verify the new phone number
 		mockPhoneTokenRepo.On("GetByPhoneNumber", ctx, newPhoneNumber).Return(&PhoneNumberVerificationToken{
-			CoreModel: core.CoreModel{ID: 2},
+			CoreModel:   core.CoreModel{ID: 2},
 			PhoneNumber: newPhoneNumber,
 			TokenHash:   "hashed_new_token",
 			ExpiresAt:   time.Now().Add(15 * time.Minute),
@@ -235,9 +232,9 @@ func TestAccountService_EndToEndWorkflows(t *testing.T) {
 
 		// Mock that account exists with old phone number
 		existingAccount := &Account{
-			CoreModel: core.CoreModel{ID: 3},
-			FullName:  "Bob Johnson",
-			Email:     "bob@example.com",
+			CoreModel:   core.CoreModel{ID: 3},
+			FullName:    "Bob Johnson",
+			Email:       "bob@example.com",
 			PhoneNumber: &oldPhoneNumber,
 		}
 
@@ -245,9 +242,9 @@ func TestAccountService_EndToEndWorkflows(t *testing.T) {
 
 		// Mock account update with new phone number
 		mockRepo.On("Update", ctx, existingAccount, (*string)(nil), (*string)(nil), &newPhoneNumber, (*TermsAndPolicy)(nil), (*AnalyticsPreference)(nil), (*bool)(nil)).Return(&Account{
-			CoreModel: core.CoreModel{ID: 3},
-			FullName:  "Bob Johnson",
-			Email:     "bob@example.com",
+			CoreModel:   core.CoreModel{ID: 3},
+			FullName:    "Bob Johnson",
+			Email:       "bob@example.com",
 			PhoneNumber: &newPhoneNumber,
 		}, nil)
 

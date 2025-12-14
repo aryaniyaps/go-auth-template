@@ -4,10 +4,11 @@ import (
 	"context"
 	"testing"
 
+	"server/internal/domain/core"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap"
-	"server/internal/domain/core"
 )
 
 // MockAccountRepo is a mock implementation of AccountRepo for testing
@@ -44,8 +45,8 @@ func (m *MockAccountRepo) GetByPhoneNumber(ctx context.Context, phoneNumber stri
 	return args.Get(0).(*Account), args.Error(1)
 }
 
-func (m *MockAccountRepo) Update(ctx context.Context, account *Account, fullName *string, avatarURL *string, phoneNumber *string, termsAndPolicy *TermsAndPolicy, analyticsPreference *AnalyticsPreference, whatsappJobAlerts *bool) (*Account, error) {
-	args := m.Called(ctx, account, fullName, avatarURL, phoneNumber, termsAndPolicy, analyticsPreference, whatsappJobAlerts)
+func (m *MockAccountRepo) Update(ctx context.Context, account *Account, fullName *string, avatarURL *string, phoneNumber *string, termsAndPolicy *TermsAndPolicy, analyticsPreference *AnalyticsPreference) (*Account, error) {
+	args := m.Called(ctx, account, fullName, avatarURL, phoneNumber, termsAndPolicy, analyticsPreference)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -212,10 +213,10 @@ func TestAccountService_GetAccountByPhoneNumber(t *testing.T) {
 			phoneNumber: "+12345678901",
 			setupMocks: func(mockRepo *MockAccountRepo, mockSMS *MockMessageSender) {
 				mockAccount := &Account{
-					CoreModel:    core.CoreModel{ID: 1},
-					Email:        "test@example.com",
-					FullName:     "Test User",
-					PhoneNumber:  strPtr("+12345678901"),
+					CoreModel:   core.CoreModel{ID: 1},
+					Email:       "test@example.com",
+					FullName:    "Test User",
+					PhoneNumber: strPtr("+12345678901"),
 				}
 				mockRepo.On("GetByPhoneNumber", mock.Anything, "+12345678901").Return(mockAccount, nil)
 			},
@@ -389,10 +390,10 @@ func TestAccountService_UpdateAccountPhoneNumber(t *testing.T) {
 					FullName:  "Test User",
 				}
 				updatedAccount := &Account{
-					CoreModel:    core.CoreModel{ID: 1},
-					Email:        "test@example.com",
-					FullName:     "Test User",
-					PhoneNumber:  strPtr("+12345678901"),
+					CoreModel:   core.CoreModel{ID: 1},
+					Email:       "test@example.com",
+					FullName:    "Test User",
+					PhoneNumber: strPtr("+12345678901"),
 				}
 				mockRepo.On("Get", mock.Anything, int64(1)).Return(existingAccount, nil)
 				mockRepo.On("Update", mock.Anything, existingAccount, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(updatedAccount, nil)
