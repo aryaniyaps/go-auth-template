@@ -1,0 +1,10 @@
+<mjml>
+  <mj-head>
+    <mj-title>{% block title %}{% endblock %}</mj-title>
+    <mj-preview>{% block preview %}Your healthcare career opportunities await{% endblock %}</mj-preview>
+  </mj-head>
+  <mj-body>
+    <!-- Template structure with Pongo2 blocks -->
+    {% block content %}{% endblock %}
+  </mj-body>
+</mjml>

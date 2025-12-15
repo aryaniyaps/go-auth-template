@@ -110,15 +110,7 @@ func addStringToSlice(slice []string, item string) []string {
 	return append(slice, item)
 }
 
-// Error types for repository operations
-var (
-	ErrAccountNotFound    = errors.New("account not found")
-	ErrEmailAlreadyExists = errors.New("email already exists")
-	ErrPhoneAlreadyExists = errors.New("phone number already exists")
-	ErrInvalidCredentials = errors.New("invalid credentials")
-	ErrTokenExpired       = errors.New("token has expired")
-	ErrTokenNotFound      = errors.New("token not found")
-)
+// Error types for repository operations are now defined in error.go
 
 // Repository interfaces
 type AccountRepo interface {

@@ -11,8 +11,35 @@ import (
 	"server/graph/model"
 )
 
+// verifyCaptchaToken verifies a captcha token and returns a message if verification fails
+func (r *mutationResolver) verifyCaptchaToken(ctx context.Context, captchaToken string) (bool, string) {
+	if captchaToken == "" {
+		return false, "Captcha token is required"
+	}
+
+	valid, err := r.captchaVerifier.VerifyToken(ctx, captchaToken)
+	if err != nil {
+		return false, "Captcha verification failed"
+	}
+
+	if !valid {
+		return false, "Invalid captcha token"
+	}
+
+	return true, ""
+}
+
 // RequestEmailVerificationToken is the resolver for the requestEmailVerificationToken field.
 func (r *mutationResolver) RequestEmailVerificationToken(ctx context.Context, email string, captchaToken string) (model.RequestEmailVerificationTokenPayload, error) {
+	// Verify captcha token first
+	valid, message := r.verifyCaptchaToken(ctx, captchaToken)
+	if !valid {
+		return &model.InvalidCaptchaTokenError{
+			Message: message,
+		}, nil
+	}
+
+	// TODO: Implement the actual email verification token request logic
 	panic(fmt.Errorf("not implemented: RequestEmailVerificationToken - requestEmailVerificationToken"))
 }
 
@@ -53,6 +80,15 @@ func (r *mutationResolver) LoginWithPasskey(ctx context.Context, authenticationR
 
 // LoginWithPassword is the resolver for the loginWithPassword field.
 func (r *mutationResolver) LoginWithPassword(ctx context.Context, login string, password string, captchaToken string) (model.LoginWithPasswordPayload, error) {
+	// Verify captcha token first
+	valid, message := r.verifyCaptchaToken(ctx, captchaToken)
+	if !valid {
+		return &model.InvalidCaptchaTokenError{
+			Message: message,
+		}, nil
+	}
+
+	// TODO: Implement the actual login logic
 	panic(fmt.Errorf("not implemented: LoginWithPassword - loginWithPassword"))
 }
 

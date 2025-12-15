@@ -10,7 +10,9 @@ import (
 	"server/internal/domain/account"
 	"server/internal/domain/auth"
 	serverhttp "server/internal/http"
+	"server/internal/infrastructure/captcha"
 	"server/internal/infrastructure/db"
+	"server/internal/infrastructure/email"
 	"server/internal/infrastructure/s3client"
 	"server/internal/logger"
 
@@ -77,6 +79,10 @@ func NewApp() *fx.App {
 			resolver.NewResolver,
 		),
 		fx.Options(
+			// Email infrastructure
+			email.ProviderModule,
+			// Captcha infrastructure
+			captcha.ProviderModule,
 			// Account domain repositories
 			account.AccountDomainModule,
 			// Auth domain repositories

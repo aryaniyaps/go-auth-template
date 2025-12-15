@@ -1,0 +1,9 @@
+Use this token to verify your email. The token is only valid for {{ token_expires_in }}.
+
+{{ app_name }} ( {{ app_url }} )
+
+Use the following email verification: {{ verification_token }}
+Requester User Agent: {{ user_agent }}
+Support: {{ support_email }}
+
+Team {{app_name}}
