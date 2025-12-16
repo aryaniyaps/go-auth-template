@@ -6,79 +6,56 @@ import (
 	appconfig "server/internal/config"
 )
 
-// ProviderModule provides the captcha client and related services to the dependency injection container
+const (
+	// ProviderDummy represents the dummy captcha provider
+	ProviderDummy = "dummy"
+
+	// ProviderTurnstile represents the Cloudflare Turnstile provider
+	ProviderTurnstile = "turnstile"
+)
+
+// ProviderModule provides captcha verification services using dependency injection
+// It follows the established patterns from the email package for consistency.
 var ProviderModule = fx.Module("captcha",
-	// Provide captcha client as a constructor
-	fx.Provide(NewCaptchaClient),
-
-	// Provide captcha verifier interface (for dependency injection)
-	fx.Provide(NewCaptchaClientProvider),
+	fx.Provide(NewCaptchaVerifierProvider),
 )
 
-// CaptchaClientOptions provides configuration options for the captcha client
-type CaptchaClientOptions struct {
-	fx.In
-
-	Config *appconfig.Config
-}
-
-// CaptchaVerifierOptions provides options for creating a captcha verifier
-type CaptchaVerifierOptions struct {
-	fx.In
-
-	Config *appconfig.Config
-}
-
-// NewCaptchaClientFx is an fx-compatible constructor for CaptchaClient
-func NewCaptchaClientFx(opts CaptchaClientOptions) (*CaptchaClient, error) {
-	return NewCaptchaClient(opts.Config)
-}
-
-// NewCaptchaVerifierFx is an fx-compatible constructor that returns the interface
-func NewCaptchaVerifierFx(opts CaptchaVerifierOptions) (CaptchaVerifier, error) {
-	return NewCaptchaClientProvider(opts.Config)
-}
-
-// CaptchaClientGroup groups captcha-related dependencies together
-type CaptchaClientGroup struct {
-	fx.In
-
-	Client   *CaptchaClient
-	Verifier CaptchaVerifier `optional:"true"`
-}
-
-// ProvideCaptchaGroup provides a grouped set of captcha services
-func ProvideCaptchaGroup(opts CaptchaClientOptions) (CaptchaClientGroup, error) {
-	client, err := NewCaptchaClient(opts.Config)
-	if err != nil {
-		return CaptchaClientGroup{}, err
+// NewCaptchaVerifierProvider creates a captcha verifier instance based on the configuration.
+// It supports different captcha providers and gracefully falls back to dummy provider
+// when the requested provider is not configured or unsupported.
+//
+// Provider selection logic:
+// - "turnstile" → Cloudflare Turnstile (requires CloudflareSecretKey and CloudflareSiteKey)
+// - "dummy" or empty → Dummy verifier (default, always works)
+// - Other values → Error
+//
+// Default provider is "dummy" for development environments.
+func NewCaptchaVerifierProvider(cfg *appconfig.Config) (BaseCaptchaVerifier, error) {
+	if cfg == nil {
+		// If no config is provided, default to dummy verifier
+		return NewDummyVerifier(), nil
 	}
 
-	verifier, err := NewCaptchaClientProvider(opts.Config)
-	if err != nil {
-		// If verifier creation fails, we can still provide the client
-		return CaptchaClientGroup{
-			Client:   client,
-			Verifier: nil,
-		}, nil
+	provider := cfg.CaptchaProvider
+	if provider == "" {
+		provider = ProviderDummy // Default to dummy if not specified
 	}
 
-	return CaptchaClientGroup{
-		Client:   client,
-		Verifier: verifier,
-	}, nil
+	switch provider {
+	case ProviderDummy:
+		return NewDummyVerifier(), nil
+
+	case ProviderTurnstile:
+		// Validate required configuration for Turnstile
+		if cfg.CloudflareSecretKey == "" {
+			return nil, ErrProviderNotConfigured
+		}
+
+		// Site key is optional for verification but good to have for validation
+		turnstile := NewTurnstileVerifier(cfg.CloudflareSecretKey, cfg.CloudflareSiteKey)
+		return turnstile, nil
+
+	default:
+		return nil, ErrUnsupportedProvider
+	}
 }
-
-// CaptchaProvider provides different ways to inject captcha services
-var CaptchaProvider = fx.Options(
-	fx.Provide(
-		// Direct client provider
-		NewCaptchaClientFx,
-
-		// Interface provider for loose coupling
-		NewCaptchaVerifierFx,
-
-		// Group provider for multiple captcha services
-		ProvideCaptchaGroup,
-	),
-)

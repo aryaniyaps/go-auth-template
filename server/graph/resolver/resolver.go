@@ -7,11 +7,11 @@ import (
 type Resolver struct {
 	// add services here
 	// UserService *services.UserService
-	captchaVerifier captcha.CaptchaVerifier
+	captchaVerifier captcha.BaseCaptchaVerifier
 }
 
 // constructor for Fx
-func NewResolver(captchaVerifier captcha.CaptchaVerifier) *Resolver {
+func NewResolver(captchaVerifier captcha.BaseCaptchaVerifier) *Resolver {
 	return &Resolver{
 		captchaVerifier: captchaVerifier,
 	}

@@ -17,4 +17,16 @@ var (
 
 	// ErrUnsupportedProvider is returned when an unsupported captcha provider is specified
 	ErrUnsupportedProvider = errors.New("unsupported captcha provider")
+
+	// ErrMissingSecretKey is returned when the secret key is not configured
+	ErrMissingSecretKey = errors.New("captcha secret key is required")
+
+	// ErrInvalidSecretKey is returned when the secret key is invalid
+	ErrInvalidSecretKey = errors.New("invalid captcha secret key")
+
+	// ErrBadRequest is returned when the request is malformed
+	ErrBadRequest = errors.New("bad request to captcha provider")
+
+	// ErrExpiredToken is returned when the captcha token has expired
+	ErrExpiredToken = errors.New("captcha token has expired")
 )
