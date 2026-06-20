@@ -11,7 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.93.2
 	github.com/darkrockmountain/gomail v0.6.1
 	github.com/flosch/pongo2/v5 v5.0.0
-	github.com/go-chi/chi/v5 v5.2.3
+	github.com/go-chi/chi/v5 v5.2.4
 	github.com/go-chi/cors v1.2.2
 	github.com/go-jose/go-jose/v4 v4.1.3
 	github.com/nyaruka/phonenumbers v1.6.7
